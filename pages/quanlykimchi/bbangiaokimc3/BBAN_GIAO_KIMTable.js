@@ -28,9 +28,6 @@ const BBAN_GIAO_KIMTable = ({
   showToast,
   loadData,
 }) => {
-  useEffect(() => {
-    console.log(data);
-  }, []);
   const [selectedRecords, setSelectedRecords] = useState([]);
   const [isMultiDelete, setIsMultiDelete] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,15 +38,36 @@ const BBAN_GIAO_KIMTable = ({
     setSearchTerm(e.target.value);
   };
   const acceptDelete = async () => {
-    try {
-      const res = await delete_QLKC_BBAN_BANGIAO_KIM(id);
-      setShowConfirmDialog(false);
-      showToast("success", "Xóa thành công!");
-      loadData();
-    } catch (err) {
-      setShowConfirmDialog(false);
-      showToast("error", "Xóa không thành công!");
-      console.log(err.message);
+    if (isMultiDelete) {
+      console.log("selected records", selectedRecords);
+      let i = 0;
+      selectedRecords.forEach(async (record) => {
+        i += 1;
+        try {
+          const res = await delete_QLKC_BBAN_BANGIAO_KIM(record.iD_BIENBAN);
+          setShowConfirmDialog(false);
+          showToast("success", "Xóa thành công!");
+        } catch (err) {
+          setShowConfirmDialog(false);
+          showToast("error", "Xóa không thành công!");
+          console.log(err.message);
+        }
+      });
+      if (i === selectedRecords.length) {
+        loadData();
+        setSelectedRecords([]);
+      }
+    } else {
+      try {
+        const res = await delete_QLKC_BBAN_BANGIAO_KIM(id);
+        setShowConfirmDialog(false);
+        showToast("success", "Xóa thành công!");
+        loadData();
+      } catch (err) {
+        setShowConfirmDialog(false);
+        showToast("error", "Xóa không thành công!");
+        console.log(err.message);
+      }
     }
   };
 
@@ -171,7 +189,7 @@ const BBAN_GIAO_KIMTable = ({
               label="Xóa nhiều"
               severity="danger"
               onClick={() => {
-                setIsHide(true);
+                setShowConfirmDialog(true);
                 setIsMultiDelete(true);
               }}
               disabled={!selectedRecords.length}

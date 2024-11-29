@@ -43,19 +43,25 @@ export const BBanGiaoKimC3 = () => {
     try {
       const results = await get_All_DM_DONVI();
       setDonViArr(results);
-      console.log(results);
     } catch (err) {
       console.log(err.message);
     }
   };
   const loadDataTable = async () => {
     try {
+      const current_MADVIQLY = JSON.parse(
+        sessionStorage.getItem("current_MADVIQLY")
+      );
       const data = {
         pageIndex: pageIndex,
         pageSize: pageSize,
         don_vi_nhan: options.donViNhan,
         don_vi_giao: options.donViGiao,
         trang_thai: options.trangThai,
+        don_vi:
+          options.donViNhan !== "" || options.donViGiao !== ""
+            ? ""
+            : current_MADVIQLY,
       };
       const res = await search_BBAN_BANGIAO_KIM(data);
       console.log(res);
@@ -69,7 +75,7 @@ export const BBanGiaoKimC3 = () => {
   const handleCloseModal = () => {
     setVisible(false);
     setIsUpdate(false);
-    setIsView(false);
+    setBienBan({});
   };
   const handleOpenModal = () => {
     setVisible(true);
@@ -98,6 +104,7 @@ export const BBanGiaoKimC3 = () => {
   useEffect(() => {
     loadDataTable();
   }, [pageIndex, pageSize]);
+
   return (
     <div className="grid">
       <Toast ref={toast} />
@@ -115,7 +122,7 @@ export const BBanGiaoKimC3 = () => {
                   value={options.donViGiao}
                   options={donViArr}
                   onChange={(e) => {
-                    setOptions({ ...options, donViGiao: e.target.value });
+                    setOptions({ ...options, donViGiao: e.target.value ?? "" });
                   }}
                   optionLabel="ten"
                   id="donViGiao"
@@ -133,7 +140,7 @@ export const BBanGiaoKimC3 = () => {
                   value={options.donViNhan}
                   options={donViArr}
                   onChange={(e) => {
-                    setOptions({ ...options, donViNhan: e.target.value });
+                    setOptions({ ...options, donViNhan: e.target.value ?? "" });
                   }}
                   optionLabel="ten"
                   id="donViNhan"

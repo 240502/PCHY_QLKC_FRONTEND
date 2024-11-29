@@ -121,7 +121,6 @@ const BBAN_GIAO_KIMModal = ({
               Chọn đơn vị giao
             </label>
             <Dropdown
-              disabled={isView}
               className="mt-2 w-full"
               value={bienBan.doN_VI_GIAO}
               options={donViArr}
@@ -152,7 +151,6 @@ const BBAN_GIAO_KIMModal = ({
               Chọn đơn vị nhận
             </label>
             <Dropdown
-              disabled={isView}
               className="mt-2 w-full"
               value={bienBan.doN_VI_NHAN}
               options={donViArr}
@@ -184,7 +182,6 @@ const BBAN_GIAO_KIMModal = ({
           <div className="w-5">
             <label htmlFor="ma_kim">Mã kìm</label>
             <InputText
-              readOnly={isView}
               className="block w-full mt-2"
               id="ma_kim"
               placeholder="Nhập mã kìm ..."
@@ -203,7 +200,6 @@ const BBAN_GIAO_KIMModal = ({
           <div className="w-5">
             <label htmlFor="so_luong">Số lượng kìm</label>
             <InputText
-              readOnly={isView}
               className="block w-full mt-2"
               id="so_luong"
               placeholder="Nhập số lượng kìm ..."
@@ -226,7 +222,6 @@ const BBAN_GIAO_KIMModal = ({
           </label>
           <InputText
             id="TEN"
-            readOnly={isView}
             className="w-full"
             placeholder="Nội dung bàn giao ..."
             value={bienBan.noI_DUNG}
@@ -238,18 +233,14 @@ const BBAN_GIAO_KIMModal = ({
         </div>
 
         <div className="flex justify-content-center gap-4 mt-4">
-          {isView ? (
-            <></>
-          ) : (
-            <Button
-              label="Lưu"
-              onClick={handleData}
-              severity="success"
-              style={{
-                backgroundColor: "#1445a7",
-              }}
-            />
-          )}
+          <Button
+            label="Lưu"
+            onClick={handleData}
+            severity="success"
+            style={{
+              backgroundColor: "#1445a7",
+            }}
+          />
           <Button
             label="Đóng"
             outlined
