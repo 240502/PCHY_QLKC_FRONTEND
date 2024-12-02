@@ -54,3 +54,11 @@ export const update_QLKC_BBAN_BANGIAO_KIMTraLai = async (id) => {
   );
   return res;
 };
+
+export const cancel_QLKC_BBAN_BANGIAO_KIM = async (id) => {
+  console.log(id);
+  const res = await apiClient.put(
+    "/BBAN_BANGIAO_KIM/cancel_QLKC_BBAN_BANGIAO_KIM?id_bban=" + id
+  );
+  return res;
+};

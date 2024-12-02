@@ -8,6 +8,9 @@ import {
   insert_BBAN_BANGIAO_KIM,
   update_QLKC_BBAN_BANGIAO_KIMChoDuyet,
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
+import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
+import { MultiSelect } from "primereact/multiselect";
+
 const BBAN_GIAO_KIMModal = ({
   isUpdate,
   visible,
@@ -19,8 +22,25 @@ const BBAN_GIAO_KIMModal = ({
   showToast,
 }) => {
   const [errors, setErrors] = useState({});
+  const [D_KIM, setD_KIM] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   useEffect(() => {
-    console.log(bienBan);
+    const getAllD_KIM = async () => {
+      try {
+        const data = {};
+        const res = await D_KIMService.search_D_KIM(data);
+        const arrId = bienBan.iD_KIM.split(",").map(Number);
+        const selectItems = res.data.filter((item) =>
+          arrId.includes(item.id_kim)
+        );
+        console.log(selectItems);
+        setSelectedItems(selectItems);
+        setD_KIM(res.data);
+      } catch (err) {
+        console.log(err.message);
+      }
+    };
+    getAllD_KIM();
   }, [bienBan]);
   const handleData = () => {
     let newErrors;
@@ -32,8 +52,6 @@ const BBAN_GIAO_KIMModal = ({
       newErrors = { ...newErrors, donViGiao: "Không được để trống ô này!" };
     }
     if (!bienBan?.doN_VI_NHAN) {
-      console.log("err2");
-
       newErrors = { ...newErrors, donViNhan: "Không được để trống ô này!" };
     }
     if (bienBan?.doN_VI_GIAO && bienBan.doN_VI_NHAN) {
@@ -46,14 +64,12 @@ const BBAN_GIAO_KIMModal = ({
       }
     }
     if (!bienBan?.iD_KIM) {
-      console.log("err3");
-
       newErrors = { ...newErrors, maKim: "Không được để trống ô này!" };
     }
-    if (!bienBan?.sO_LUONG) {
+    if (!bienBan?.sO_LUONG && bienBan?.iD_BIENBAN) {
       newErrors = { ...newErrors, soLuong: "Không được để trống ô này!" };
     } else {
-      if (!/^\d+$/.test(bienBan?.sO_LUONG)) {
+      if (!/^\d+$/.test(bienBan?.sO_LUONG) && bienBan?.iD_BIENBAN) {
         newErrors = {
           ...newErrors,
           soLuong: "Số lượng không bao gồm chữ, ký tự đặc biệt!",
@@ -68,7 +84,7 @@ const BBAN_GIAO_KIMModal = ({
         nguoi_giao: bienBan?.nguoI_GIAO,
         nguoi_nhan: bienBan?.nguoI_NHAN,
         don_vi_nhan: bienBan?.doN_VI_NHAN,
-        so_luong: Number(bienBan?.sO_LUONG),
+        so_luong: Number(bienBan?.sO_LUONG) ?? selectedItems.length,
         id_kim: bienBan?.iD_KIM,
         noi_dung: bienBan?.noi_dung,
         id_bienban: bienBan?.iD_BIENBAN,
@@ -105,6 +121,14 @@ const BBAN_GIAO_KIMModal = ({
       showToast("error", "Sửa không thành công!");
     }
   };
+  useEffect(() => {
+    if (!bienBan?.iD_KIM) {
+      const itemIds = selectedItems.map((item) => item.id_kim);
+      console.log("itemIds", itemIds.join(","));
+      setBienBan({ ...bienBan, iD_KIM: itemIds.join(",") });
+    }
+  }, [selectedItems]);
+
   return (
     <Dialog
       className="w-6 md:w-5/12 lg:w-4/12"
@@ -122,7 +146,7 @@ const BBAN_GIAO_KIMModal = ({
             </label>
             <Dropdown
               className="mt-2 w-full"
-              value={bienBan.doN_VI_GIAO}
+              value={bienBan?.doN_VI_GIAO}
               options={donViArr}
               onChange={(e) => {
                 const donVi = donViArr.find(
@@ -152,7 +176,7 @@ const BBAN_GIAO_KIMModal = ({
             </label>
             <Dropdown
               className="mt-2 w-full"
-              value={bienBan.doN_VI_NHAN}
+              value={bienBan?.doN_VI_NHAN}
               options={donViArr}
               onChange={(e) => {
                 const donVi = donViArr.find(
@@ -179,31 +203,50 @@ const BBAN_GIAO_KIMModal = ({
         </div>
 
         <div className="flex flex-row justify-content-between">
-          <div className="w-5">
-            <label htmlFor="ma_kim">Mã kìm</label>
-            <InputText
+          <div className="w-full">
+            <label htmlFor="ma_kim" className="block">
+              Mã kìm
+            </label>
+            <MultiSelect
+              className=" w-full mt-2"
+              value={selectedItems}
+              options={D_KIM}
+              onChange={(e) => {
+                setSelectedItems(e.value);
+              }}
+              placeholder="Chọn mã kìm"
+              display="chip"
+              optionLabel="ma_hieu"
+              onFocus={() => {
+                setErrors({ ...errors, maKim: null });
+              }}
+            />
+            {/* <p>Các mục đã chọn: {selectedItems.join(", ")}</p> */}
+            {/* <InputText
               className="block w-full mt-2"
               id="ma_kim"
               placeholder="Nhập mã kìm ..."
-              value={bienBan.iD_KIM}
+              value={bienBan?.iD_KIM}
               onChange={(e) => {
                 setBienBan({ ...bienBan, iD_KIM: e.target.value });
               }}
               onFocus={() => {
                 setErrors({ ...errors, maKim: null });
               }}
-            />
+            /> */}
             {errors?.maKim && (
               <small className="p-error">{errors?.maKim}</small>
             )}
           </div>
-          <div className="w-5">
+        </div>
+        <div>
+          <div className="">
             <label htmlFor="so_luong">Số lượng kìm</label>
             <InputText
               className="block w-full mt-2"
               id="so_luong"
               placeholder="Nhập số lượng kìm ..."
-              value={bienBan.sO_LUONG}
+              value={selectedItems.length}
               onChange={(e) => {
                 setBienBan({ ...bienBan, sO_LUONG: e.target.value });
               }}
@@ -224,7 +267,7 @@ const BBAN_GIAO_KIMModal = ({
             id="TEN"
             className="w-full"
             placeholder="Nội dung bàn giao ..."
-            value={bienBan.noI_DUNG}
+            value={bienBan?.noI_DUNG}
             onChange={(e) => {
               setBienBan({ ...bienBan, noI_DUNG: e.target.value });
             }}

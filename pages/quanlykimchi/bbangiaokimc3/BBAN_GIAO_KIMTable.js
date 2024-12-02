@@ -9,11 +9,18 @@ import { propSortAndFilter } from "../../../constants/propGlobal";
 import { Dropdown } from "primereact/dropdown";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import {
+  cancel_QLKC_BBAN_BANGIAO_KIM,
   delete_QLKC_BBAN_BANGIAO_KIM,
   update_QLKC_BBAN_BANGIAO_KIMKyC1,
   update_QLKC_BBAN_BANGIAO_KIMKyC2,
   update_QLKC_BBAN_BANGIAO_KIMTraLai,
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
+import { useRouter } from "next/router";
+import { MultiSelect } from "primereact/multiselect";
+const arrLoaiBienBan = [
+  { label: "Bàn giao", value: 0 },
+  { label: "Trả lại", value: 1 },
+];
 const BBAN_GIAO_KIMTable = ({
   data,
   pageCount,
@@ -27,7 +34,11 @@ const BBAN_GIAO_KIMTable = ({
   handleOpenModal,
   showToast,
   loadData,
+  handleOnClickKySoBtn,
+  setOptions,
+  options,
 }) => {
+  const router = useRouter();
   const [selectedRecords, setSelectedRecords] = useState([]);
   const [isMultiDelete, setIsMultiDelete] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,18 +114,31 @@ const BBAN_GIAO_KIMTable = ({
       console.log(err.message);
     }
   };
-  const rejectBienBan = async (id) => {
-    try {
-      const res = await update_QLKC_BBAN_BANGIAO_KIMTraLai(id);
-      showToast("success", "Cập nhập thành công!");
-      loadData();
-    } catch (err) {
-      showToast("error", "Cập nhập không thành công!");
-      console.log(err.message);
+  const rejectBienBan = async (bienBan) => {
+    if (bienBan.tranG_THAI === 1) {
+      try {
+        const res = await update_QLKC_BBAN_BANGIAO_KIMTraLai(
+          bienBan.iD_BIENBAN
+        );
+        showToast("success", "Cập nhập thành công!");
+        loadData();
+      } catch (err) {
+        showToast("error", "Cập nhập không thành công!");
+        console.log(err.message);
+      }
+    } else {
+      try {
+        const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.iD_BIENBAN);
+        showToast("success", "Cập nhập thành công!");
+        loadData();
+      } catch (err) {
+        showToast("error", "Cập nhập không thành công!");
+        console.log(err.message);
+      }
     }
   };
   const buttonOption = (rowData) => {
-    return (
+    return rowData.tranG_THAI !== 3 ? (
       <div className="flex">
         {/* <Button
           style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
@@ -146,38 +170,58 @@ const BBAN_GIAO_KIMTable = ({
             setIsMultiDelete(false);
           }}
         />
+        {rowData.tranG_THAI === 0 && (
+          <Button
+            icon="pi pi-user-edit"
+            tooltip="Ký cấp 1"
+            tooltipOptions={{ position: "top" }}
+            style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+            onClick={() => {
+              signBienBan(rowData.iD_BIENBAN, "C1");
+            }}
+          />
+        )}
+        {rowData.tranG_THAI === 1 && (
+          <Button
+            icon="pi pi-user-edit"
+            tooltip="Ký cấp 2"
+            tooltipOptions={{ position: "top" }}
+            style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+            onClick={() => {
+              signBienBan(rowData.iD_BIENBAN, "C2");
+            }}
+          />
+        )}
+        {rowData.tranG_THAI !== 0 && (
+          <Button
+            icon="pi pi-user-edit"
+            tooltip={rowData.tranG_THAI === 2 ? "Hủy biên bản" : "Trả lại"}
+            tooltipOptions={{ position: "top" }}
+            style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+            onClick={() => {
+              rejectBienBan(rowData);
+            }}
+          />
+        )}
+
         <Button
           icon="pi pi-user-edit"
-          tooltip="Ký cấp 1"
-          tooltipOptions={{ position: "top" }}
-          style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
-          onClick={() => {
-            signBienBan(rowData.iD_BIENBAN, "C1");
-          }}
-        />
-        <Button
-          icon="pi pi-user-edit"
-          tooltip="Ký cấp 2"
-          tooltipOptions={{ position: "top" }}
-          style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
-          onClick={() => {
-            signBienBan(rowData.iD_BIENBAN, "C2");
-          }}
-        />
-        <Button
-          icon="pi pi-user-edit"
-          tooltip="Trả lại"
+          tooltip="Ký số"
           tooltipOptions={{ position: "top" }}
           style={{
             backgroundColor: "#1445a7",
           }}
           onClick={() => {
-            rejectBienBan(rowData.iD_BIENBAN);
+            console.log("on click");
+            handleOnClickKySoBtn(rowData);
           }}
-        />
+        ></Button>
       </div>
+    ) : (
+      <></>
     );
   };
+
   const headerTemplate = (options) => {
     const className = `${options.className} flex flex-wrap justify-content-between align-items-center gap-2`;
     return (
@@ -195,6 +239,7 @@ const BBAN_GIAO_KIMTable = ({
               disabled={!selectedRecords.length}
             />
           )}
+
           <Button
             label="Thêm mới"
             style={{ backgroundColor: "#1445a7" }}
@@ -210,10 +255,31 @@ const BBAN_GIAO_KIMTable = ({
   useEffect(() => {
     handleFilterData(searchTerm);
   }, [searchTerm, data]);
+  // const [selectedItems, setSelectedItems] = useState([]);
+  // const options = [
+  //   { label: "Apple", value: "apple" },
+  //   { label: "Banana", value: "banana" },
+  //   { label: "Orange", value: "orange" },
+  //   { label: "Grapes", value: "grapes" },
+  // ];
+  // useEffect(() => {
+  //   console.log("selected", selectedItems);
+  // }, [selectedItems]);
   return (
     <>
       <Panel headerTemplate={headerTemplate}>
-        <div className="flex justify-content-end mb-3">
+        <div className="flex justify-content-between mb-3">
+          <div>
+            <Dropdown
+              value={options.loaiBienBan}
+              options={arrLoaiBienBan}
+              placeholder="Chọn loại biên bản"
+              showClear
+              onChange={(e) => {
+                setOptions({ ...options, loaiBienBan: e.value });
+              }}
+            />
+          </div>
           <span className="p-input-icon-left w-full md:w-auto">
             <i className="pi pi-search" />
             <InputText

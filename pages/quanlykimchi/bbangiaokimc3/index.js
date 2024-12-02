@@ -9,7 +9,7 @@ import { Button } from "primereact/button";
 import { search_BBAN_BANGIAO_KIM } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
 import BBAN_GIAO_KIMModal from "./BBAN_GIAO_KIMModal";
 import { get_All_DM_DONVI } from "../../../services/quantrihethong/DM_DONVIService";
-
+import BienBanViewer from "./BienBanViewer";
 const arrTrangThai = [
   { label: "Soạn thảo", value: 0 },
   { label: "Ký cấp 1", value: 1 },
@@ -24,11 +24,14 @@ export const BBanGiaoKimC3 = () => {
   const [filteredArr, setFilteredArr] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [visibleViewer, setVisibleViewer] = useState(false);
+
   const [isUpdate, setIsUpdate] = useState(false);
   const [options, setOptions] = useState({
     donViNhan: "",
     donViGiao: "",
     trangThai: "",
+    loaiBienBan: 0,
   });
   const toast = useRef(null);
 
@@ -47,6 +50,7 @@ export const BBanGiaoKimC3 = () => {
       console.log(err.message);
     }
   };
+
   const loadDataTable = async () => {
     try {
       const current_MADVIQLY = JSON.parse(
@@ -58,6 +62,7 @@ export const BBanGiaoKimC3 = () => {
         don_vi_nhan: options.donViNhan,
         don_vi_giao: options.donViGiao,
         trang_thai: options.trangThai,
+        loai_bban: options.loaiBienBan,
         don_vi:
           options.donViNhan !== "" || options.donViGiao !== ""
             ? ""
@@ -80,10 +85,21 @@ export const BBanGiaoKimC3 = () => {
   const handleOpenModal = () => {
     setVisible(true);
   };
+  const handleCloseModalViewer = () => {
+    setVisibleViewer(false);
+    setBienBan({});
+  };
+  const handleOpenModalViewer = () => {
+    setVisible(true);
+  };
 
   const handleOnClickUpdateBtn = (bienBan) => {
     setIsUpdate(true);
     setVisible(true);
+    setBienBan(bienBan);
+  };
+  const handleOnClickKySoBtn = (bienBan) => {
+    setVisibleViewer(true);
     setBienBan(bienBan);
   };
   const handleFilterData = (content) => {
@@ -103,7 +119,7 @@ export const BBanGiaoKimC3 = () => {
   }, []);
   useEffect(() => {
     loadDataTable();
-  }, [pageIndex, pageSize]);
+  }, [pageIndex, pageSize, options.loaiBienBan]);
 
   return (
     <div className="grid">
@@ -174,7 +190,6 @@ export const BBanGiaoKimC3 = () => {
                 />
               </div>
             </div>
-
             <div className="flex justify-content-center mt-4">
               <Button
                 style={{ backgroundColor: "#1445a7", color: "#fff" }}
@@ -200,6 +215,9 @@ export const BBanGiaoKimC3 = () => {
             handleOpenModal={handleOpenModal}
             showToast={showToast}
             loadData={loadDataTable}
+            handleOnClickKySoBtn={handleOnClickKySoBtn}
+            setOptions={setOptions}
+            options={options}
           />
         </div>
         {visible && (
@@ -212,6 +230,13 @@ export const BBanGiaoKimC3 = () => {
             bienBan={bienBan}
             setBienBan={setBienBan}
             showToast={showToast}
+          />
+        )}
+        {visibleViewer && (
+          <BienBanViewer
+            bienBan={bienBan}
+            visible={visibleViewer}
+            handleCloseModalViewer={handleCloseModalViewer}
           />
         )}
       </div>
