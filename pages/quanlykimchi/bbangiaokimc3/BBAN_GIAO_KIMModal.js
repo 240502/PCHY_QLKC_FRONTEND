@@ -10,7 +10,10 @@ import {
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
 import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
 import { MultiSelect } from "primereact/multiselect";
-
+const arrLoaiBienBan = [
+  { label: "Bàn giao", value: 0 },
+  { label: "Nhận lại", value: 1 },
+];
 const BBAN_GIAO_KIMModal = ({
   isUpdate,
   visible,
@@ -29,19 +32,30 @@ const BBAN_GIAO_KIMModal = ({
       try {
         const data = {};
         const res = await D_KIMService.search_D_KIM(data);
-        const arrId = bienBan.iD_KIM.split(",").map(Number);
-        const selectItems = res.data.filter((item) =>
-          arrId.includes(item.id_kim)
-        );
-        console.log(selectItems);
-        setSelectedItems(selectItems);
         setD_KIM(res.data);
+        console.log(res);
+        if (bienBan) {
+          console.log("bienBan", bienBan);
+          const arrId = bienBan?.iD_KIM?.split(",").map(Number);
+          const selectItems = res.data.filter((item) =>
+            arrId.includes(item.id_kim)
+          );
+          setSelectedItems(selectItems);
+        }
       } catch (err) {
         console.log(err.message);
       }
     };
     getAllD_KIM();
-  }, [bienBan]);
+    return () => {
+      setSelectedItems([]);
+      setD_KIM([]);
+      console.log("unmounted");
+    };
+  }, []);
+  useEffect(() => {
+    console.log("D_KIm", D_KIM);
+  }, [D_KIM]);
   const handleData = () => {
     let newErrors;
     if (!bienBan?.doN_VI_GIAO) {
@@ -84,11 +98,12 @@ const BBAN_GIAO_KIMModal = ({
         nguoi_giao: bienBan?.nguoI_GIAO,
         nguoi_nhan: bienBan?.nguoI_NHAN,
         don_vi_nhan: bienBan?.doN_VI_NHAN,
-        so_luong: Number(bienBan?.sO_LUONG) ?? selectedItems.length,
+        so_luong: bienBan?.sO_LUONG ?? selectedItems.length,
         id_kim: bienBan?.iD_KIM,
-        noi_dung: bienBan?.noi_dung,
+        noi_dung: bienBan?.noI_DUNG,
         id_bienban: bienBan?.iD_BIENBAN,
         ngay_giao: bienBan?.ngaY_GIAO,
+        loai_bban: bienBan?.loaI_BBAN,
       };
       if (isUpdate) {
         update_BBAN(data);
@@ -139,6 +154,19 @@ const BBAN_GIAO_KIMModal = ({
       }}
     >
       <div className="flex flex-column gap-4">
+        <div>
+          <label className="block mb-2">Loại biên bản</label>
+          <Dropdown
+            value={bienBan?.loaI_BBAN}
+            className="w-full"
+            options={arrLoaiBienBan}
+            placeholder="Chọn loại biên bản"
+            showClear
+            onChange={(e) => {
+              setBienBan({ ...bienBan, loaI_BBAN: e.value });
+            }}
+          />
+        </div>
         <div className="flex flex-row justify-content-between">
           <div className="w-5">
             <label htmlFor="SAP_XEP" className="mb-5">

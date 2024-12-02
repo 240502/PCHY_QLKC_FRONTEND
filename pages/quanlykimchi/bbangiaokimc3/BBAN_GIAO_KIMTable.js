@@ -1,5 +1,5 @@
 import { Panel } from "primereact/panel";
-import { FilterMatchMode, PrimeIcons } from "primereact/api";
+import { PrimeIcons } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import React, { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
@@ -7,7 +7,7 @@ import { Button } from "primereact/button";
 import { Column } from "primereact/column";
 import { propSortAndFilter } from "../../../constants/propGlobal";
 import { Dropdown } from "primereact/dropdown";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ConfirmDialog } from "primereact/confirmdialog";
 import {
   cancel_QLKC_BBAN_BANGIAO_KIM,
   delete_QLKC_BBAN_BANGIAO_KIM,
@@ -15,11 +15,9 @@ import {
   update_QLKC_BBAN_BANGIAO_KIMKyC2,
   update_QLKC_BBAN_BANGIAO_KIMTraLai,
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
-import { useRouter } from "next/router";
-import { MultiSelect } from "primereact/multiselect";
 const arrLoaiBienBan = [
   { label: "Bàn giao", value: 0 },
-  { label: "Trả lại", value: 1 },
+  { label: "Nhận lại", value: 1 },
 ];
 const BBAN_GIAO_KIMTable = ({
   data,
@@ -38,7 +36,6 @@ const BBAN_GIAO_KIMTable = ({
   setOptions,
   options,
 }) => {
-  const router = useRouter();
   const [selectedRecords, setSelectedRecords] = useState([]);
   const [isMultiDelete, setIsMultiDelete] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
