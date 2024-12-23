@@ -1,5 +1,5 @@
 // Đảm bảo khai báo urlServer trước khi sử dụng nó
-export const urlServer = "https://localhost:44383"; 
+export const urlServer = "https://localhost:44314";
 
 export const token = "";
 export const config = { headers: { Authorization: "Bearer " + token } };

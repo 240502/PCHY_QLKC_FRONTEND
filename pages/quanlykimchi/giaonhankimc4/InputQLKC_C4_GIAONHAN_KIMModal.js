@@ -105,7 +105,7 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
     } catch (err) {
       toast.current.show({
         severity: "error",
-        summary: "Thông báo",
+summary: "Thông báo",
         detail: "Lỗi khi cập nhật dữ liệu",
         life: 3000,
       });
@@ -191,7 +191,7 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
             value={GIAONHANKIM.doN_VI_GIAO}
             options={dsDonvi}
             onChange={(e) => handleInputChange("doN_VI_GIAO", e.value)}
-            optionLabel="ten"
+optionLabel="ten"
             optionValue="ma_dviqly"
             placeholder="Chọn đơn vị giao"
             className="w-full"
@@ -277,7 +277,7 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
           <InputText
             id="loaI_BBAN"
             className="w-full"
-            onChange={(e) => handleInputChange("loaI_BBAN", e.target.value)}
+onChange={(e) => handleInputChange("loaI_BBAN", e.target.value)}
             value={GIAONHANKIM.loaI_BBAN}
           />
         </div>

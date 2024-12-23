@@ -13,23 +13,14 @@ const BienBanViewer = ({ bienBan, visible, handleCloseModalViewer }) => {
       status: "Soạn thảo",
       date: "02/12/2024 10:30",
       user: "Nguyễn Văn Sang",
-      icon: "pi pi-shopping-cart",
-      color: "#9C27B0",
-      image: "game-controller.jpg",
     },
     {
       status: "Ký cấp 1",
       user: "Nguyễn Văn Sang",
-      icon: "pi pi-shopping-cart",
-      color: "#9C27B0",
-      image: "game-controller.jpg",
     },
     {
       status: "Ký cấp 2",
       user: "Nguyễn Văn Sang",
-
-      icon: "pi pi-cog",
-      color: "#673AB7",
     },
   ];
   const customizedMarker = (event) => {
@@ -65,8 +56,8 @@ const BienBanViewer = ({ bienBan, visible, handleCloseModalViewer }) => {
             workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}
           >
             <Viewer
-              defaultScale={1.0} // Đặt mức zoom mặc định là 100%
-              fileUrl="/files/cdfc347e-b41d-4cb4-8940-2d8abcf1a0c1.pdf" // Thay bằng đường dẫn đến file PDF
+              defaultScale={1.0}
+              fileUrl="/files/cdfc347e-b41d-4cb4-8940-2d8abcf1a0c1.pdf"
               plugins={[defaultLayoutPluginInstance]}
             />
           </Worker>
