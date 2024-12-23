@@ -1,0 +1,17 @@
+export const QLKC_C4_GIAONHAN_TEMCHI = {
+  loai: null,
+  sO_LUONG_GIAO: null,
+  sO_LUONG_TRA: null,
+  sO_LUONG_THUHOI: null,
+  donvI_TINH: null,
+  doN_VI_GIAO: null,
+  doN_VI_NHAN: null,
+  ngaY_GIAO: null,
+  ngaY_NHAN: null,
+  loaI_BBAN: null,
+  noI_DUNG: null,
+  tranG_THAI: null,
+  id: null,
+  nguoI_GIAO: null,
+  nguoI_NHAN: null,
+};
