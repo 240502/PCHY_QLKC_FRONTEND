@@ -31,7 +31,7 @@ export const BBanGiaoKimC3 = () => {
     donViNhan: "",
     donViGiao: "",
     trangThai: "",
-    loaiBienBan: 0,
+    loaiBienBan: 2,
   });
   const toast = useRef(null);
 
@@ -62,7 +62,7 @@ export const BBanGiaoKimC3 = () => {
         don_vi_nhan: options.donViNhan,
         don_vi_giao: options.donViGiao,
         trang_thai: options.trangThai,
-        loai_bban: options.loaiBienBan,
+        loai_bban: options.loaiBienBan !== 2 ? options.loaiBienBan : "",
         don_vi:
           options.donViNhan !== "" || options.donViGiao !== ""
             ? ""

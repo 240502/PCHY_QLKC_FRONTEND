@@ -18,6 +18,7 @@ import {
 const arrLoaiBienBan = [
   { label: "Bàn giao", value: 0 },
   { label: "Nhận lại", value: 1 },
+  { label: "Tất cả", value: 2 },
 ];
 const BBAN_GIAO_KIMTable = ({
   data,
@@ -274,6 +275,7 @@ const BBAN_GIAO_KIMTable = ({
               showClear
               onChange={(e) => {
                 setOptions({ ...options, loaiBienBan: e.value });
+                setOptions({ ...options, loaiBienBan: e.value });
               }}
             />
           </div>
@@ -328,6 +330,12 @@ const BBAN_GIAO_KIMTable = ({
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
             field="sO_LUONG"
             header="Số lượng"
+            className="min-w-10rem"
+          ></Column>
+          <Column
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="iD_KIM"
+            header="Mã kìm"
             className="min-w-10rem"
           ></Column>
           <Column

@@ -10,6 +10,7 @@ import {
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
 import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
 import { MultiSelect } from "primereact/multiselect";
+import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
 const arrLoaiBienBan = [
   { label: "Bàn giao", value: 0 },
   { label: "Nhận lại", value: 1 },
@@ -27,35 +28,39 @@ const BBAN_GIAO_KIMModal = ({
   const [errors, setErrors] = useState({});
   const [D_KIM, setD_KIM] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [user, setUser] = useState(HT_NGUOIDUNG);
   useEffect(() => {
+    
     const getAllD_KIM = async () => {
       try {
-        const data = {};
-        const res = await D_KIMService.search_D_KIM(data);
-        setD_KIM(res.data);
+        const ma_dviqly = JSON.parse(
+          sessionStorage.getItem("current_MADVIQLY") || ""
+        );
+        const res = await D_KIMService.get_All_D_KIMByMA_DVIQLY(ma_dviqly);
         console.log(res);
-        if (bienBan) {
-          console.log("bienBan", bienBan);
-          const arrId = bienBan?.iD_KIM?.split(",").map(Number);
-          const selectItems = res.data.filter((item) =>
-            arrId.includes(item.id_kim)
-          );
-          setSelectedItems(selectItems);
+        if (bienBan?.iD_KIM) {
+          const selectedIds = bienBan.iD_KIM
+            .split(",")
+            .map((item) => Number(item));
+
+          setSelectedItems(selectedIds);
         }
+        setD_KIM(res);
       } catch (err) {
         console.log(err.message);
       }
     };
+
     getAllD_KIM();
+    const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+    setUser(user);
+
     return () => {
       setSelectedItems([]);
       setD_KIM([]);
-      console.log("unmounted");
     };
   }, []);
-  useEffect(() => {
-    console.log("D_KIm", D_KIM);
-  }, [D_KIM]);
+
   const handleData = () => {
     let newErrors;
     if (!bienBan?.doN_VI_GIAO) {
@@ -77,7 +82,7 @@ const BBAN_GIAO_KIMModal = ({
         };
       }
     }
-    if (!bienBan?.iD_KIM) {
+    if (selectedItems.length == 0) {
       newErrors = { ...newErrors, maKim: "Không được để trống ô này!" };
     }
     if (!bienBan?.sO_LUONG && bienBan?.iD_BIENBAN) {
@@ -93,35 +98,62 @@ const BBAN_GIAO_KIMModal = ({
     if (newErrors) {
       setErrors(newErrors);
     } else {
-      const data = {
-        don_vi_giao: bienBan?.doN_VI_GIAO,
-        nguoi_giao: bienBan?.nguoI_GIAO,
-        nguoi_nhan: bienBan?.nguoI_NHAN,
-        don_vi_nhan: bienBan?.doN_VI_NHAN,
-        so_luong: bienBan?.sO_LUONG ?? selectedItems.length,
-        id_kim: bienBan?.iD_KIM,
-        noi_dung: bienBan?.noI_DUNG,
-        id_bienban: bienBan?.iD_BIENBAN,
-        ngay_giao: bienBan?.ngaY_GIAO,
-        loai_bban: bienBan?.loaI_BBAN,
-      };
       if (isUpdate) {
+        const data = {
+          don_vi_giao: bienBan?.doN_VI_GIAO,
+          nguoi_giao: bienBan.nguoi_giao,
+          nguoi_nhan: bienBan?.nguoI_NHAN,
+          don_vi_nhan: bienBan?.doN_VI_NHAN,
+          so_luong: selectedItems.length,
+          id_kim: selectedItems.join(","),
+          noi_dung: bienBan?.noI_DUNG,
+          id_bienban: bienBan?.iD_BIENBAN,
+          ngay_giao: bienBan?.ngaY_GIAO,
+          loai_bban: bienBan?.loaI_BBAN,
+        };
+        console.log("new bien ban", data);
         update_BBAN(data);
       } else {
+        const data = {
+          don_vi_giao: bienBan?.doN_VI_GIAO,
+          nguoi_giao: user.id,
+          nguoi_nhan: bienBan?.nguoI_NHAN,
+          don_vi_nhan: bienBan?.doN_VI_NHAN,
+          so_luong: bienBan?.sO_LUONG ?? selectedItems.length,
+          id_kim: selectedItems.join(","),
+          noi_dung: bienBan?.noI_DUNG,
+          loai_bban: bienBan?.loaI_BBAN,
+        };
+        console.log("new bien ban", data);
         insert_BBAN(data);
       }
     }
   };
   const insert_BBAN = async (data) => {
     try {
-      console.log(data);
       const res = await insert_BBAN_BANGIAO_KIM(data);
       showToast("success", "Thêm thành công!");
       handleCloseModal();
+      const dataUpdate = {
+        ht_nguoidung_id: user.id,
+        ma_dvigiao: data.don_vi_nhan,
+        id_kim: null,
+      };
+      selectedItems.forEach((item) => {
+        update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: item });
+      });
       loadData();
     } catch (err) {
       console.log(err);
       showToast("error", "Thêm không thành công!");
+    }
+  };
+  const update_MA_DVIQLY_D_KIM = async (id_kim) => {
+    try {
+      const res = await D_KIMService.update_MA_DVIQLY(id_kim);
+      console.log(res);
+    } catch (err) {
+      console.log(err);
     }
   };
   const update_BBAN = async (data) => {
@@ -136,14 +168,6 @@ const BBAN_GIAO_KIMModal = ({
       showToast("error", "Sửa không thành công!");
     }
   };
-  useEffect(() => {
-    if (!bienBan?.iD_KIM) {
-      const itemIds = selectedItems.map((item) => item.id_kim);
-      console.log("itemIds", itemIds.join(","));
-      setBienBan({ ...bienBan, iD_KIM: itemIds.join(",") });
-    }
-  }, [selectedItems]);
-
   return (
     <Dialog
       className="w-6 md:w-5/12 lg:w-4/12"
@@ -240,28 +264,18 @@ const BBAN_GIAO_KIMModal = ({
               value={selectedItems}
               options={D_KIM}
               onChange={(e) => {
+                console.log(e.value);
                 setSelectedItems(e.value);
               }}
               placeholder="Chọn mã kìm"
               display="chip"
+              optionValue="id_kim"
               optionLabel="ma_hieu"
               onFocus={() => {
                 setErrors({ ...errors, maKim: null });
               }}
             />
-            {/* <p>Các mục đã chọn: {selectedItems.join(", ")}</p> */}
-            {/* <InputText
-              className="block w-full mt-2"
-              id="ma_kim"
-              placeholder="Nhập mã kìm ..."
-              value={bienBan?.iD_KIM}
-              onChange={(e) => {
-                setBienBan({ ...bienBan, iD_KIM: e.target.value });
-              }}
-              onFocus={() => {
-                setErrors({ ...errors, maKim: null });
-              }}
-            /> */}
+
             {errors?.maKim && (
               <small className="p-error">{errors?.maKim}</small>
             )}

@@ -9,6 +9,14 @@ export const search_BBAN_BANGIAO_KIM = async (data) => {
   return res.data;
 };
 
+export const updateNguoiNhan = async (data) => {
+  const res = await apiClient.put(
+    "/BBAN_BANGIAO_KIM/update_NguoiNhan_BBAN_BANGIAO_KIM",
+    data
+  );
+  return res;
+};
+
 export const insert_BBAN_BANGIAO_KIM = async (data) => {
   const res = await apiClient.post(
     "/BBAN_BANGIAO_KIM/insert_BBAN_BANGIAO_KIM",
