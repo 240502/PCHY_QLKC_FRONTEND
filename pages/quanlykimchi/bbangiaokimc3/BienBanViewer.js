@@ -11,36 +11,22 @@ import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOID
 import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
 import { updateNguoiNhan } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
 import { Button } from "primereact/button";
-const BienBanViewer = ({ bienBan, visible, handleCloseModalViewer }) => {
+import dayjs from "dayjs";
+import {
+  update_QLKC_BBAN_BANGIAO_KIMKyC1,
+  update_QLKC_BBAN_BANGIAO_KIMKyC2,
+  get_BBAN_ById,
+} from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
+import { QLKC_BBAN_BANGIAO_KIM } from "../../../models/QLKC_BBAN_BANGIAO_KIM";
+const BienBanViewer = ({
+  bienBan,
+  visible,
+  handleCloseModalViewer,
+
+  showToast,
+}) => {
   const [users, setUsers] = useState([HT_NGUOIDUNG]);
-  const [userId, setUserId] = useState(null);
-  useEffect(() => {
-    const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
-      try {
-        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(
-          bienBan.doN_VI_NHAN
-        );
-        setUsers(res);
-        console.log(res);
-      } catch (e) {
-        console.log(e);
-      }
-    };
-    getHT_NGUOIDUNGByMA_DVIQLY();
-    console.log("bienBan", bienBan);
-  }, []);
-  const update_NguoiNhan = async (userId) => {
-    try {
-      const data = {
-        ht_nguoidung_id: userId,
-        bienban_id: bienBan.iD_BIENBAN,
-      };
-      const res = await updateNguoiNhan(data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-  const events = [
+  const [events, setEvents] = useState([
     {
       status: "Soạn thảo",
       date: "02/12/2024 10:30",
@@ -54,10 +40,96 @@ const BienBanViewer = ({ bienBan, visible, handleCloseModalViewer }) => {
       status: "Ký cấp 2",
       user: "Nguyễn Văn Sang",
     },
-  ];
+  ]);
+  const [nguoiGiao, setNguoiGiao] = useState(HT_NGUOIDUNG);
+  const [nguoiNhan, setNguoiNhan] = useState(HT_NGUOIDUNG);
+  const [newBienBan, setNewBienBan] = useState(QLKC_BBAN_BANGIAO_KIM);
+  const getBienBanById = async (id) => {
+    try {
+      const res = await get_BBAN_ById(id);
+      console.log(res);
+      setNewBienBan(res);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const signC1 = async (id) => {
+    try {
+      const res = await update_QLKC_BBAN_BANGIAO_KIMKyC1(id);
+      showToast("success", "Ký thành công!");
+      getBienBanById(id);
+    } catch (err) {
+      showToast("error", "Ký không thành công!");
+      console.log(err.message);
+    }
+  };
+  const signC2 = async (id) => {
+    try {
+      const res = await update_QLKC_BBAN_BANGIAO_KIMKyC2(id);
+      console.log(res);
+      showToast("success", "Ký thành công!");
+      getBienBanById(id);
+    } catch (err) {
+      showToast("error", "Ký không thành công!");
+      console.log(err.message);
+    }
+  };
+  useEffect(() => {
+    const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
+      try {
+        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(
+          bienBan.doN_VI_NHAN
+        );
+        setUsers(res);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    getHT_NGUOIDUNGByMA_DVIQLY();
+
+    console.log("bienban", bienBan);
+  }, []);
+  useEffect(() => {
+    console.log("nguoi nhan", nguoiNhan);
+    setEvents((prv) =>
+      prv.map((e) =>
+        e.status === "Soạn thảo"
+          ? {
+              ...e,
+              user: bienBan?.ten_nguoi_giao,
+              date: bienBan?.ngaY_GIAO,
+            }
+          : e.status === "Ký cấp 1" && bienBan?.tranG_THAI === 1
+          ? {
+              ...e,
+              user: bienBan?.ten_nguoi_giao,
+
+              date: bienBan?.ngaY_GIAO,
+            }
+          : {
+              ...e,
+              user: bienBan?.ten_nguoi_nhan,
+
+              date: bienBan?.ngaY_NHAN,
+            }
+      )
+    );
+  }, [nguoiNhan]);
+  const update_NguoiNhan = async (userId) => {
+    try {
+      const data = {
+        ht_nguoidung_id: userId,
+        bienban_id: bienBan.iD_BIENBAN,
+      };
+      const res = await updateNguoiNhan(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const customizedMarker = (event) => {
     const hasTime = !!event.date;
-    console.log(hasTime);
     return (
       <span
         className={`p-timeline-event-marker border-5 ${
@@ -152,7 +224,11 @@ const BienBanViewer = ({ bienBan, visible, handleCloseModalViewer }) => {
                     <small className="text-color-secondary">{item.user}</small>
                     <br></br>
                     <small className="text-color-secondary">
-                      {item.date ?? "Chưa ký"}
+                      {item.date
+                        ? dayjs(new Date(item.date)).format(
+                            "DD-MM-YYYY HH:MM:ss"
+                          )
+                        : "Chưa ký"}
                     </small>
                   </>
                 )}
@@ -161,12 +237,20 @@ const BienBanViewer = ({ bienBan, visible, handleCloseModalViewer }) => {
           </div>
         </div>
       </div>
-      <div className="flex justify-content-end">
+      <div className="flex justify-content-end" style={{ marginTop: "20px" }}>
         <Button
           label="Ký số"
           severity="success"
           className="me-3"
           style={{ marginRight: "10px" }}
+          onClick={() => {
+            console.log("Ký");
+            if (bienBan?.tranG_THAI === 0) {
+              signC1(bienBan?.iD_BIENBAN);
+            } else {
+              signC2(bienBan?.iD_BIENBAN);
+            }
+          }}
         />
         <Button label="Đóng" severity="secondary" />
       </div>

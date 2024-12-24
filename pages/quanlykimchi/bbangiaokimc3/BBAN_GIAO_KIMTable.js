@@ -13,7 +13,6 @@ import {
   delete_QLKC_BBAN_BANGIAO_KIM,
   update_QLKC_BBAN_BANGIAO_KIMKyC1,
   update_QLKC_BBAN_BANGIAO_KIMKyC2,
-  update_QLKC_BBAN_BANGIAO_KIMTraLai,
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
 const arrLoaiBienBan = [
   { label: "Bàn giao", value: 0 },
@@ -48,7 +47,6 @@ const BBAN_GIAO_KIMTable = ({
   };
   const acceptDelete = async () => {
     if (isMultiDelete) {
-      console.log("selected records", selectedRecords);
       let i = 0;
       selectedRecords.forEach(async (record) => {
         i += 1;
@@ -93,7 +91,6 @@ const BBAN_GIAO_KIMTable = ({
   const signC1 = async (id) => {
     try {
       const res = await update_QLKC_BBAN_BANGIAO_KIMKyC1(id);
-      console.log(res);
       showToast("success", "Ký thành công!");
       loadData();
     } catch (err) {
@@ -113,87 +110,48 @@ const BBAN_GIAO_KIMTable = ({
     }
   };
   const rejectBienBan = async (bienBan) => {
-    if (bienBan.tranG_THAI === 1) {
-      try {
-        const res = await update_QLKC_BBAN_BANGIAO_KIMTraLai(
-          bienBan.iD_BIENBAN
-        );
-        showToast("success", "Cập nhập thành công!");
-        loadData();
-      } catch (err) {
-        showToast("error", "Cập nhập không thành công!");
-        console.log(err.message);
-      }
-    } else {
-      try {
-        const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.iD_BIENBAN);
-        showToast("success", "Cập nhập thành công!");
-        loadData();
-      } catch (err) {
-        showToast("error", "Cập nhập không thành công!");
-        console.log(err.message);
-      }
+    try {
+      const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.iD_BIENBAN);
+      showToast("success", "Cập nhập thành công!");
+      loadData();
+    } catch (err) {
+      showToast("error", "Cập nhập không thành công!");
+      console.log(err.message);
     }
   };
   const buttonOption = (rowData) => {
     return rowData.tranG_THAI !== 3 ? (
       <div className="flex">
-        {/* <Button
-          style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
-          icon={PrimeIcons.EYE}
-          tooltip="Xem chi tiết"
-          tooltipOptions={{ position: "top" }}
-          onClick={() => {
-            handleOnClickViewBtn(rowData);
-          }}
-        /> */}
-        <Button
-          style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
-          icon="pi pi-pencil"
-          tooltip="Sửa"
-          tooltipOptions={{ position: "top" }}
-          onClick={() => {
-            console.log("rowData", rowData);
-            handleOnClickUpdateBtn(rowData);
-          }}
-        />
-        <Button
-          icon="pi pi-trash"
-          tooltip="Xóa"
-          tooltipOptions={{ position: "top" }}
-          style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
-          onClick={() => {
-            setShowConfirmDialog(true);
-            setId(rowData.iD_BIENBAN);
-            setIsMultiDelete(false);
-          }}
-        />
         {rowData.tranG_THAI === 0 && (
-          <Button
-            icon="pi pi-user-edit"
-            tooltip="Ký cấp 1"
-            tooltipOptions={{ position: "top" }}
-            style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
-            onClick={() => {
-              signBienBan(rowData.iD_BIENBAN, "C1");
-            }}
-          />
+          <>
+            <Button
+              style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+              icon="pi pi-pencil"
+              tooltip="Sửa"
+              tooltipOptions={{ position: "top" }}
+              onClick={() => {
+                console.log("rowData", rowData);
+                handleOnClickUpdateBtn(rowData);
+              }}
+            />
+            <Button
+              icon="pi pi-trash"
+              tooltip="Xóa"
+              tooltipOptions={{ position: "top" }}
+              style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+              onClick={() => {
+                setShowConfirmDialog(true);
+                setId(rowData.iD_BIENBAN);
+                setIsMultiDelete(false);
+              }}
+            />
+          </>
         )}
-        {rowData.tranG_THAI === 1 && (
-          <Button
-            icon="pi pi-user-edit"
-            tooltip="Ký cấp 2"
-            tooltipOptions={{ position: "top" }}
-            style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
-            onClick={() => {
-              signBienBan(rowData.iD_BIENBAN, "C2");
-            }}
-          />
-        )}
+
         {rowData.tranG_THAI !== 0 && (
           <Button
-            icon="pi pi-user-edit"
-            tooltip={rowData.tranG_THAI === 2 ? "Hủy biên bản" : "Trả lại"}
+            icon="pi pi-times"
+            tooltip={"Hủy biên bản"}
             tooltipOptions={{ position: "top" }}
             style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
             onClick={() => {
@@ -204,7 +162,7 @@ const BBAN_GIAO_KIMTable = ({
 
         <Button
           icon="pi pi-user-edit"
-          tooltip="Ký số"
+          tooltip={rowData.tranG_THAI !== 2 ? "Ký số" : "Xem chi tiết"}
           tooltipOptions={{ position: "top" }}
           style={{
             backgroundColor: "#1445a7",
@@ -252,7 +210,9 @@ const BBAN_GIAO_KIMTable = ({
   };
   useEffect(() => {
     handleFilterData(searchTerm);
+    console.log(data);
   }, [searchTerm, data]);
+
   // const [selectedItems, setSelectedItems] = useState([]);
   // const options = [
   //   { label: "Apple", value: "apple" },
@@ -314,14 +274,14 @@ const BBAN_GIAO_KIMTable = ({
           <Column
             {...propSortAndFilter}
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="nguoI_GIAO"
+            field="ten_nguoi_giao"
             header="Người giao"
             className="min-w-10rem"
           ></Column>
           <Column
             {...propSortAndFilter}
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="nguoI_NHAN"
+            field="ten_nguoi_nhan"
             header="Người nhận"
             className="min-w-8rem"
           ></Column>

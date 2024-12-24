@@ -10,6 +10,7 @@ import { search_BBAN_BANGIAO_KIM } from "../../../services/quanlykimchi/BBAN_GIA
 import BBAN_GIAO_KIMModal from "./BBAN_GIAO_KIMModal";
 import { get_All_DM_DONVI } from "../../../services/quantrihethong/DM_DONVIService";
 import BienBanViewer from "./BienBanViewer";
+import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOIDUNGService";
 const arrTrangThai = [
   { label: "Soạn thảo", value: 0 },
   { label: "Ký cấp 1", value: 1 },
@@ -69,9 +70,38 @@ export const BBanGiaoKimC3 = () => {
             : current_MADVIQLY,
       };
       const res = await search_BBAN_BANGIAO_KIM(data);
-      console.log(res);
+      let newBienBanArr = [];
+      let nguoiNhan = {};
+      let nguoiGiao = {};
+      res?.data.forEach(async (bb, index) => {
+        if (bb?.nguoI_NHAN) {
+          try {
+            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoI_NHAN);
+            console.log("nguoi nhan", res);
+            nguoiNhan = res;
+          } catch (err) {
+            console.log(err);
+          }
+        }
+        if (bb?.nguoI_GIAO) {
+          try {
+            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoI_GIAO);
+            nguoiGiao = res;
+          } catch (err) {
+            console.log(err);
+          }
+        }
+
+        newBienBanArr.push({
+          ...bb,
+          ten_nguoi_giao: nguoiGiao.ho_ten,
+          ten_nguoi_nhan: nguoiNhan.ho_ten,
+        });
+
+        setBienBanArr(newBienBanArr);
+      });
+
       setPageCount(Math.ceil(res.totalItems / pageSize));
-      setBienBanArr(res.data);
     } catch (err) {
       console.log(err.message);
       setBienBanArr([]);
@@ -177,7 +207,6 @@ export const BBanGiaoKimC3 = () => {
                       ...options,
                       trangThai: e.target.value,
                     });
-                    console.log(e);
                   }}
                   optionLabel="label"
                   id="TRANG_THAI"
@@ -237,6 +266,7 @@ export const BBanGiaoKimC3 = () => {
             bienBan={bienBan}
             visible={visibleViewer}
             handleCloseModalViewer={handleCloseModalViewer}
+            showToast={showToast}
           />
         )}
       </div>

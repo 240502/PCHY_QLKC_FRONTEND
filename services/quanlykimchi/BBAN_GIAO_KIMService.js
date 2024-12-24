@@ -70,3 +70,9 @@ export const cancel_QLKC_BBAN_BANGIAO_KIM = async (id) => {
   );
   return res;
 };
+export const get_BBAN_ById = async (id) => {
+  const res = await apiClient.get(
+    "/BBAN_BANGIAO_KIM/get_BBAN_BANGIAO_KIMByIdBBan?id_bban=" + id
+  );
+  return res?.data;
+};
