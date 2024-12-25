@@ -45,6 +45,8 @@ const BBAN_GIAO_KIMTable = ({
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
+
+  //Xử lý xóa nhiều bản ghi cùng lúc
   const acceptDelete = async () => {
     if (isMultiDelete) {
       let i = 0;
@@ -81,44 +83,34 @@ const BBAN_GIAO_KIMTable = ({
   const rejectDelete = () => {
     setShowConfirmDialog(false);
   };
-  const signBienBan = async (id, signType) => {
-    if (signType === "C1") {
-      signC1(id);
-    } else {
-      signC2(id);
-    }
-  };
-  const signC1 = async (id) => {
-    try {
-      const res = await update_QLKC_BBAN_BANGIAO_KIMKyC1(id);
-      showToast("success", "Ký thành công!");
-      loadData();
-    } catch (err) {
-      showToast("error", "Ký không thành công!");
-      console.log(err.message);
-    }
-  };
-  const signC2 = async (id) => {
-    try {
-      const res = await update_QLKC_BBAN_BANGIAO_KIMKyC2(id);
-      console.log(res);
-      showToast("success", "Ký thành công!");
-      loadData();
-    } catch (err) {
-      showToast("error", "Ký không thành công!");
-      console.log(err.message);
-    }
-  };
+
+  // Gọi api hủy biên bản
   const rejectBienBan = async (bienBan) => {
     try {
-      const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.iD_BIENBAN);
-      showToast("success", "Cập nhập thành công!");
-      loadData();
+      const kimId =
+        bienBan.iD_KIM.length === 1
+          ? [Number(bienBan.iD_KIM)]
+          : bienBan.iD_KIM.split[","];
+
+      hanldeUpdateMa_Dviqly(kimId);
+      // const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.iD_BIENBAN);
+      //showToast("success", "Cập nhập thành công!");
+      //loadData();
     } catch (err) {
       showToast("error", "Cập nhập không thành công!");
       console.log(err.message);
     }
   };
+
+  // handle update ma_dviqly d_kim
+  const hanldeUpdateMa_Dviqly = async (kimId) => {
+    try {
+      console.log("kim id", kimId);
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+  //Render button in table
   const buttonOption = (rowData) => {
     return rowData.tranG_THAI !== 3 ? (
       <div className="flex">
@@ -148,7 +140,7 @@ const BBAN_GIAO_KIMTable = ({
           </>
         )}
 
-        {rowData.tranG_THAI !== 0 && (
+        {rowData.tranG_THAI === 1 && (
           <Button
             icon="pi pi-times"
             tooltip={"Hủy biên bản"}
@@ -156,12 +148,13 @@ const BBAN_GIAO_KIMTable = ({
             style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
             onClick={() => {
               rejectBienBan(rowData);
+              //setShowConfirmDialog(true);
             }}
           />
         )}
 
         <Button
-          icon="pi pi-user-edit"
+          icon={`pi ${rowData.tranG_THAI !== 2 ? "pi-user-edit" : "pi-eye"} `}
           tooltip={rowData.tranG_THAI !== 2 ? "Ký số" : "Xem chi tiết"}
           tooltipOptions={{ position: "top" }}
           style={{
@@ -178,6 +171,7 @@ const BBAN_GIAO_KIMTable = ({
     );
   };
 
+  // Render title table
   const headerTemplate = (options) => {
     const className = `${options.className} flex flex-wrap justify-content-between align-items-center gap-2`;
     return (
@@ -210,19 +204,10 @@ const BBAN_GIAO_KIMTable = ({
   };
   useEffect(() => {
     handleFilterData(searchTerm);
-    console.log(data);
   }, [searchTerm, data]);
-
-  // const [selectedItems, setSelectedItems] = useState([]);
-  // const options = [
-  //   { label: "Apple", value: "apple" },
-  //   { label: "Banana", value: "banana" },
-  //   { label: "Orange", value: "orange" },
-  //   { label: "Grapes", value: "grapes" },
-  // ];
-  // useEffect(() => {
-  //   console.log("selected", selectedItems);
-  // }, [selectedItems]);
+  useEffect(() => {
+    console.log("data table", data);
+  }, [data]);
   return (
     <>
       <Panel headerTemplate={headerTemplate}>
@@ -362,6 +347,7 @@ const BBAN_GIAO_KIMTable = ({
       </Panel>
 
       {/* <Toast ref={toast} /> */}
+      {/*  Confirm delete dialog */}
       <ConfirmDialog
         visible={showConfirmDialog}
         onHide={() => setShowConfirmDialog(false)}

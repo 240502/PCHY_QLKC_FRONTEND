@@ -22,8 +22,9 @@ const BienBanViewer = ({
   bienBan,
   visible,
   handleCloseModalViewer,
-
   showToast,
+  setBienBan,
+  loadData,
 }) => {
   const [users, setUsers] = useState([HT_NGUOIDUNG]);
   const [events, setEvents] = useState([
@@ -41,13 +42,10 @@ const BienBanViewer = ({
       user: "Nguyễn Văn Sang",
     },
   ]);
-  const [nguoiGiao, setNguoiGiao] = useState(HT_NGUOIDUNG);
-  const [nguoiNhan, setNguoiNhan] = useState(HT_NGUOIDUNG);
   const [newBienBan, setNewBienBan] = useState(QLKC_BBAN_BANGIAO_KIM);
   const getBienBanById = async (id) => {
     try {
       const res = await get_BBAN_ById(id);
-      console.log(res);
       setNewBienBan(res);
     } catch (err) {
       console.log(err);
@@ -58,6 +56,8 @@ const BienBanViewer = ({
       const res = await update_QLKC_BBAN_BANGIAO_KIMKyC1(id);
       showToast("success", "Ký thành công!");
       getBienBanById(id);
+      loadData();
+      handleCloseModalViewer();
     } catch (err) {
       showToast("error", "Ký không thành công!");
       console.log(err.message);
@@ -66,9 +66,10 @@ const BienBanViewer = ({
   const signC2 = async (id) => {
     try {
       const res = await update_QLKC_BBAN_BANGIAO_KIMKyC2(id);
-      console.log(res);
       showToast("success", "Ký thành công!");
       getBienBanById(id);
+      loadData();
+      handleCloseModalViewer();
     } catch (err) {
       showToast("error", "Ký không thành công!");
       console.log(err.message);
@@ -87,35 +88,55 @@ const BienBanViewer = ({
     };
 
     getHT_NGUOIDUNGByMA_DVIQLY();
-
-    console.log("bienban", bienBan);
   }, []);
+
   useEffect(() => {
-    console.log("nguoi nhan", nguoiNhan);
     setEvents((prv) =>
-      prv.map((e) =>
-        e.status === "Soạn thảo"
-          ? {
-              ...e,
-              user: bienBan?.ten_nguoi_giao,
-              date: bienBan?.ngaY_GIAO,
-            }
-          : e.status === "Ký cấp 1" && bienBan?.tranG_THAI === 1
-          ? {
-              ...e,
-              user: bienBan?.ten_nguoi_giao,
+      prv.map((e) => {
+        if (e.status === "Soạn thảo") {
+          return {
+            ...e,
+            user: bienBan?.ten_nguoi_giao,
+            date: bienBan?.ngaY_GIAO,
+          };
+        }
+        if (
+          e.status === "Ký cấp 2" &&
+          (bienBan?.tranG_THAI === 1 || bienBan?.tranG_THAI === 2)
+        ) {
+          return {
+            ...e,
+            user: bienBan?.ten_nguoi_nhan,
 
-              date: bienBan?.ngaY_GIAO,
-            }
-          : {
-              ...e,
-              user: bienBan?.ten_nguoi_nhan,
+            date: bienBan?.ngaY_NHAN,
+          };
+        }
+        if (e.status === "Ký cấp 2" && bienBan?.tranG_THAI === 0) {
+          return {
+            ...e,
+            user: bienBan?.ten_nguoi_nhan,
+          };
+        }
 
-              date: bienBan?.ngaY_NHAN,
-            }
-      )
+        if (
+          e.status === "Ký cấp 1" &&
+          (bienBan?.tranG_THAI === 1 || bienBan?.tranG_THAI === 2)
+        ) {
+          return {
+            ...e,
+            user: bienBan?.ten_nguoi_giao,
+
+            date: bienBan?.ngaY_GIAO,
+          };
+        } else {
+          return {
+            ...e,
+            user: bienBan?.ten_nguoi_giao,
+          };
+        }
+      })
     );
-  }, [nguoiNhan]);
+  }, [bienBan]);
   const update_NguoiNhan = async (userId) => {
     try {
       const data = {
@@ -123,6 +144,7 @@ const BienBanViewer = ({
         bienban_id: bienBan.iD_BIENBAN,
       };
       const res = await updateNguoiNhan(data);
+      loadData();
     } catch (err) {
       console.log(err);
     }
@@ -146,9 +168,7 @@ const BienBanViewer = ({
       ></span>
     );
   };
-  useEffect(() => {
-    console.log("users", users);
-  }, [bienBan]);
+
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   return (
     <Dialog
@@ -175,7 +195,7 @@ const BienBanViewer = ({
               <>Đơn vị giao:</>{" "}
             </label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.doN_VI_GIAO}</strong>{" "}
+              <strong>{bienBan.teN_PB.toUpperCase()}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
@@ -183,13 +203,15 @@ const BienBanViewer = ({
               <>Đơn vị nhận:</>{" "}
             </label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.doN_VI_NHAN}</strong>{" "}
+              <strong>{bienBan.teN_DV.toUpperCase()}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
-            <label style={{ width: "25%" }}>Số lượng:</label>
+            <label style={{ width: "25%" }}>
+              <>Người giao:</>{" "}
+            </label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.sO_LUONG}</strong>{" "}
+              <strong>{bienBan.ten_nguoi_giao}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
@@ -200,18 +222,30 @@ const BienBanViewer = ({
                 className="w-full"
                 options={users}
                 placeholder="Chọn"
-                showClear
                 filter
+                disabled={bienBan?.tranG_THAI === 2 ? true : false}
                 optionValue="id"
                 optionLabel="hO_TEN"
                 onChange={(e) => {
-                  // setBienBan({ ...bienBan, loaI_BBAN: e.value });
-                  //  setUserId(e.value);
+                  const user = users.find((u) => u.id === e.value);
+                  console.log("user", user);
+                  setBienBan({
+                    ...bienBan,
+                    nguoI_NHAN: e.value,
+                    ten_nguoi_nhan: user.hO_TEN,
+                  });
                   update_NguoiNhan(e.value);
                 }}
               />
             </label>
           </div>
+          <div className="flex justify-content-between align-items-center mb-3">
+            <label style={{ width: "25%" }}>Số lượng:</label>
+            <label style={{ width: "75%" }}>
+              <strong>{bienBan.sO_LUONG}</strong>{" "}
+            </label>
+          </div>
+
           <div class="progress mt-4">
             <h5> Tiến trình ký số</h5>
             <div className="time-line">
@@ -225,9 +259,15 @@ const BienBanViewer = ({
                     <br></br>
                     <small className="text-color-secondary">
                       {item.date
-                        ? dayjs(new Date(item.date)).format(
-                            "DD-MM-YYYY HH:MM:ss"
-                          )
+                        ? `${new Date(item.date).getDate()}-${new Date(
+                            item.date
+                          ).getMonth()}-${new Date(
+                            item.date
+                          ).getFullYear()} ${new Date(
+                            item.date
+                          ).getHours()}:${new Date(
+                            item.date
+                          ).getMinutes()}:${new Date(item.date).getSeconds()}`
                         : "Chưa ký"}
                     </small>
                   </>
@@ -238,21 +278,26 @@ const BienBanViewer = ({
         </div>
       </div>
       <div className="flex justify-content-end" style={{ marginTop: "20px" }}>
+        {bienBan?.tranG_THAI !== 2 && (
+          <Button
+            label="Ký số"
+            severity="success"
+            className="me-3"
+            style={{ marginRight: "10px" }}
+            onClick={() => {
+              if (bienBan?.tranG_THAI === 0) {
+                signC1(bienBan?.iD_BIENBAN);
+              } else {
+                signC2(bienBan?.iD_BIENBAN);
+              }
+            }}
+          />
+        )}
         <Button
-          label="Ký số"
-          severity="success"
-          className="me-3"
-          style={{ marginRight: "10px" }}
-          onClick={() => {
-            console.log("Ký");
-            if (bienBan?.tranG_THAI === 0) {
-              signC1(bienBan?.iD_BIENBAN);
-            } else {
-              signC2(bienBan?.iD_BIENBAN);
-            }
-          }}
+          label="Đóng"
+          severity="secondary"
+          onClick={handleCloseModalViewer}
         />
-        <Button label="Đóng" severity="secondary" />
       </div>
     </Dialog>
   );

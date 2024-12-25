@@ -11,7 +11,7 @@ export const search_BBAN_BANGIAO_KIM = async (data) => {
 
 export const updateNguoiNhan = async (data) => {
   const res = await apiClient.put(
-    "/BBAN_BANGIAO_KIM/update_NguoiNhan_BBAN_BANGIAO_KIM",
+    "/BBAN_BANGIAO_KIM/update_NguoiNhan_BBAN_BANGGIAO_KIM",
     data
   );
   return res;

@@ -3,7 +3,6 @@ import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { useEffect, useState } from "react";
-import { isEmptyData } from "../../../utils/BBAN_GIAOKIM";
 import {
   insert_BBAN_BANGIAO_KIM,
   update_QLKC_BBAN_BANGIAO_KIMChoDuyet,
@@ -11,6 +10,7 @@ import {
 import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
 import { MultiSelect } from "primereact/multiselect";
 import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
+import { getDM_PHONGBANByMA_DVIQLY } from "../../../services/quantrihethong/DM_PHONGBANService";
 const arrLoaiBienBan = [
   { label: "Bàn giao", value: 0 },
   { label: "Nhận lại", value: 1 },
@@ -28,9 +28,9 @@ const BBAN_GIAO_KIMModal = ({
   const [errors, setErrors] = useState({});
   const [D_KIM, setD_KIM] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [phongBanArr, setPhongBanArr] = useState([]);
   const [user, setUser] = useState(HT_NGUOIDUNG);
   useEffect(() => {
-    
     const getAllD_KIM = async () => {
       try {
         const ma_dviqly = JSON.parse(
@@ -50,8 +50,18 @@ const BBAN_GIAO_KIMModal = ({
         console.log(err.message);
       }
     };
-
+    const getAllD_PhongBan = async () => {
+      console.log("call api get phong ban");
+      try {
+        const res = await getDM_PHONGBANByMA_DVIQLY("PA23");
+        console.log("phong ban", res);
+        setPhongBanArr(res);
+      } catch (err) {
+        console.log(err.message);
+      }
+    };
     getAllD_KIM();
+    getAllD_PhongBan();
     const user = JSON.parse(sessionStorage.getItem("user") || "{}");
     setUser(user);
 
@@ -117,7 +127,7 @@ const BBAN_GIAO_KIMModal = ({
         const data = {
           don_vi_giao: bienBan?.doN_VI_GIAO,
           nguoi_giao: user.id,
-          nguoi_nhan: bienBan?.nguoI_NHAN,
+          nguoi_nhan: "",
           don_vi_nhan: bienBan?.doN_VI_NHAN,
           so_luong: bienBan?.sO_LUONG ?? selectedItems.length,
           id_kim: selectedItems.join(","),
@@ -186,6 +196,7 @@ const BBAN_GIAO_KIMModal = ({
             options={arrLoaiBienBan}
             placeholder="Chọn loại biên bản"
             showClear
+            filter
             onChange={(e) => {
               setBienBan({ ...bienBan, loaI_BBAN: e.value });
             }}
@@ -199,20 +210,19 @@ const BBAN_GIAO_KIMModal = ({
             <Dropdown
               className="mt-2 w-full"
               value={bienBan?.doN_VI_GIAO}
-              options={donViArr}
+              options={phongBanArr}
+              filter
               onChange={(e) => {
-                const donVi = donViArr.find(
-                  (item) => item.ma_dviqly === e.value
-                );
+                const donVi = donViArr.find((item) => item.id === e.value);
+                console.log(e.value);
                 setBienBan({
                   ...bienBan,
                   doN_VI_GIAO: e.value,
-                  nguoI_GIAO: donVi.ten,
                 });
               }}
-              optionLabel="ten"
               id="donViNhan"
-              optionValue="ma_dviqly"
+              optionValue="id"
+              optionLabel="ten"
               placeholder="Chọn đơn vị "
               onFocus={() => {
                 setErrors({ ...errors, donViGiao: null });

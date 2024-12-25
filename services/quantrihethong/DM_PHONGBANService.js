@@ -1,8 +1,14 @@
 import { apiClient } from "../../constants/api";
 
 export const searchDM_PHONGBAN = async (data) => {
-  console.log({...data,ma_dviqly:JSON.parse(sessionStorage.getItem("current_MADVIQLY"))})
-  const res = await apiClient.post("/DM_PHONGBAN/search_DM_PHONGBAN", {...data,ma_dviqly:JSON.parse(sessionStorage.getItem("current_MADVIQLY"))});
+  console.log({
+    ...data,
+    ma_dviqly: JSON.parse(sessionStorage.getItem("current_MADVIQLY")),
+  });
+  const res = await apiClient.post("/DM_PHONGBAN/search_DM_PHONGBAN", {
+    ...data,
+    ma_dviqly: JSON.parse(sessionStorage.getItem("current_MADVIQLY")),
+  });
   return res.data;
 };
 
@@ -26,4 +32,11 @@ export const deleteDM_PHONGBAN = async (id) => {
 export const getDM_PHONGBANById = async (id) => {
   const res = await apiClient.get("/DM_PHONGBAN/get_DM_PHONGBANByID?ID=" + id);
   return res.data;
+};
+
+export const getDM_PHONGBANByMA_DVIQLY = async (ma_dviqly) => {
+  const res = await apiClient.get(
+    "/DM_PHONGBAN/get_DM_PHONGBANByMA_DVI_QLY?ma_dviqly=" + ma_dviqly
+  );
+  return res?.data;
 };

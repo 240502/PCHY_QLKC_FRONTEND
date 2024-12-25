@@ -4,13 +4,13 @@ import { Panel } from "primereact/panel";
 import { Toast } from "primereact/toast";
 import { Divider } from "primereact/divider";
 import { Dropdown } from "primereact/dropdown";
-import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { search_BBAN_BANGIAO_KIM } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
 import BBAN_GIAO_KIMModal from "./BBAN_GIAO_KIMModal";
 import { get_All_DM_DONVI } from "../../../services/quantrihethong/DM_DONVIService";
 import BienBanViewer from "./BienBanViewer";
 import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOIDUNGService";
+import { getDM_PHONGBANByMA_DVIQLY } from "../../../services/quantrihethong/DM_PHONGBANService";
 const arrTrangThai = [
   { label: "Soạn thảo", value: 0 },
   { label: "Ký cấp 1", value: 1 },
@@ -26,7 +26,7 @@ export const BBanGiaoKimC3 = () => {
   const [pageCount, setPageCount] = useState(0);
   const [visible, setVisible] = useState(false);
   const [visibleViewer, setVisibleViewer] = useState(false);
-
+  const [phongBanArr, setPhongBanArr] = useState([]);
   const [isUpdate, setIsUpdate] = useState(false);
   const [options, setOptions] = useState({
     donViNhan: "",
@@ -36,6 +36,7 @@ export const BBanGiaoKimC3 = () => {
   });
   const toast = useRef(null);
 
+  // show toast function
   const showToast = (type, message) => {
     toast.current.show({
       severity: type,
@@ -43,6 +44,8 @@ export const BBanGiaoKimC3 = () => {
       detail: message,
     });
   };
+
+  // call api get all dm_donvi function
   const loadDataDropdownDonVi = async () => {
     try {
       const results = await get_All_DM_DONVI();
@@ -51,7 +54,17 @@ export const BBanGiaoKimC3 = () => {
       console.log(err.message);
     }
   };
-
+  const getAllD_PhongBan = async () => {
+    console.log("call api get phong ban");
+    try {
+      const res = await getDM_PHONGBANByMA_DVIQLY("PA23");
+      console.log("phong ban", res);
+      setPhongBanArr(res);
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+  // call api get bban_bangiao_kim
   const loadDataTable = async () => {
     try {
       const current_MADVIQLY = JSON.parse(
@@ -64,20 +77,16 @@ export const BBanGiaoKimC3 = () => {
         don_vi_giao: options.donViGiao,
         trang_thai: options.trangThai,
         loai_bban: options.loaiBienBan !== 2 ? options.loaiBienBan : "",
-        don_vi:
-          options.donViNhan !== "" || options.donViGiao !== ""
-            ? ""
-            : current_MADVIQLY,
       };
       const res = await search_BBAN_BANGIAO_KIM(data);
       let newBienBanArr = [];
-      let nguoiNhan = {};
-      let nguoiGiao = {};
+
       res?.data.forEach(async (bb, index) => {
+        let nguoiNhan = {};
+        let nguoiGiao = {};
         if (bb?.nguoI_NHAN) {
           try {
             const res = await HT_NGUOIDUNG_Service.getById(bb.nguoI_NHAN);
-            console.log("nguoi nhan", res);
             nguoiNhan = res;
           } catch (err) {
             console.log(err);
@@ -97,7 +106,6 @@ export const BBanGiaoKimC3 = () => {
           ten_nguoi_giao: nguoiGiao.ho_ten,
           ten_nguoi_nhan: nguoiNhan.ho_ten,
         });
-
         setBienBanArr(newBienBanArr);
       });
 
@@ -119,10 +127,6 @@ export const BBanGiaoKimC3 = () => {
     setVisibleViewer(false);
     setBienBan({});
   };
-  const handleOpenModalViewer = () => {
-    setVisible(true);
-  };
-
   const handleOnClickUpdateBtn = (bienBan) => {
     setIsUpdate(true);
     setVisible(true);
@@ -132,6 +136,8 @@ export const BBanGiaoKimC3 = () => {
     setVisibleViewer(true);
     setBienBan(bienBan);
   };
+
+  // filter data function. function will activate when client input content search at input button
   const handleFilterData = (content) => {
     if (content === "") {
       setFilteredArr(bienBanArr);
@@ -146,6 +152,7 @@ export const BBanGiaoKimC3 = () => {
   };
   useEffect(() => {
     loadDataDropdownDonVi();
+    getAllD_PhongBan();
   }, []);
   useEffect(() => {
     loadDataTable();
@@ -158,7 +165,6 @@ export const BBanGiaoKimC3 = () => {
         <div className="card">
           <Panel header="Tìm kiếm" className="mb-4">
             <Divider style={{ marginTop: "0", marginBottom: "10px" }} />
-
             <div className="flex flex-column lg:flex-row gap-3">
               <div className="flex-auto">
                 <label htmlFor="MA" className="mb-2 block">
@@ -166,13 +172,15 @@ export const BBanGiaoKimC3 = () => {
                 </label>
                 <Dropdown
                   value={options.donViGiao}
-                  options={donViArr}
+                  options={phongBanArr}
+                  filter
                   onChange={(e) => {
+                    console.log(e.value);
                     setOptions({ ...options, donViGiao: e.target.value ?? "" });
                   }}
                   optionLabel="ten"
                   id="donViGiao"
-                  optionValue="ma_dviqly"
+                  optionValue="id"
                   placeholder="Chọn đơn vị"
                   className="w-full"
                   showClear
@@ -185,6 +193,7 @@ export const BBanGiaoKimC3 = () => {
                 <Dropdown
                   value={options.donViNhan}
                   options={donViArr}
+                  filter
                   onChange={(e) => {
                     setOptions({ ...options, donViNhan: e.target.value ?? "" });
                   }}
@@ -267,6 +276,8 @@ export const BBanGiaoKimC3 = () => {
             visible={visibleViewer}
             handleCloseModalViewer={handleCloseModalViewer}
             showToast={showToast}
+            setBienBan={setBienBan}
+            loadData={loadDataTable}
           />
         )}
       </div>

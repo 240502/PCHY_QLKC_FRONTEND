@@ -13,4 +13,6 @@ export const QLKC_BBAN_BANGIAO_KIM = {
   trang_thai: null,
   ten_nguoi_giao: null,
   ten_nguoi_nhan: null,
+  teN_PB: null,
+  teN_DV: null,
 };
