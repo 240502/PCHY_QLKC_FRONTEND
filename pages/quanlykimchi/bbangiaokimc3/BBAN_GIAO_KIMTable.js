@@ -14,6 +14,9 @@ import {
   update_QLKC_BBAN_BANGIAO_KIMKyC1,
   update_QLKC_BBAN_BANGIAO_KIMKyC2,
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
+import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
+import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
+import { QLKC_BBAN_BANGIAO_KIM } from "../../../models/QLKC_BBAN_BANGIAO_KIM";
 const arrLoaiBienBan = [
   { label: "Bàn giao", value: 0 },
   { label: "Nhận lại", value: 1 },
@@ -40,20 +43,21 @@ const BBAN_GIAO_KIMTable = ({
   const [isMultiDelete, setIsMultiDelete] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [id, setId] = useState();
+  const [bienBan, setBienBan] = useState(QLKC_BBAN_BANGIAO_KIM);
   const rowPerPageOptions = [5, 10, 15];
+  const [user, setUser] = useState(HT_NGUOIDUNG);
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  //Xử lý xóa nhiều bản ghi cùng lúc
+  //Xử lý xóa bản ghi
   const acceptDelete = async () => {
     if (isMultiDelete) {
       let i = 0;
       selectedRecords.forEach(async (record) => {
         i += 1;
         try {
-          const res = await delete_QLKC_BBAN_BANGIAO_KIM(record.iD_BIENBAN);
+          const res = await delete_QLKC_BBAN_BANGIAO_KIM(record.id_bienban);
           setShowConfirmDialog(false);
           showToast("success", "Xóa thành công!");
         } catch (err) {
@@ -68,7 +72,7 @@ const BBAN_GIAO_KIMTable = ({
       }
     } else {
       try {
-        const res = await delete_QLKC_BBAN_BANGIAO_KIM(id);
+        const res = await delete_QLKC_BBAN_BANGIAO_KIM(bienBan?.id_bienban);
         setShowConfirmDialog(false);
         showToast("success", "Xóa thành công!");
         loadData();
@@ -92,7 +96,7 @@ const BBAN_GIAO_KIMTable = ({
           ? [Number(bienBan.iD_KIM)]
           : bienBan.iD_KIM.split[","];
 
-      hanldeUpdateMa_Dviqly(kimId);
+      handleUpdateMaDviqlyD_KIM(kimId);
       // const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.iD_BIENBAN);
       //showToast("success", "Cập nhập thành công!");
       //loadData();
@@ -102,19 +106,11 @@ const BBAN_GIAO_KIMTable = ({
     }
   };
 
-  // handle update ma_dviqly d_kim
-  const hanldeUpdateMa_Dviqly = async (kimId) => {
-    try {
-      console.log("kim id", kimId);
-    } catch (err) {
-      console.log(err.message);
-    }
-  };
   //Render button in table
   const buttonOption = (rowData) => {
-    return rowData.tranG_THAI !== 3 ? (
+    return rowData.trang_thai !== 3 ? (
       <div className="flex">
-        {rowData.tranG_THAI === 0 && (
+        {rowData.trang_thai === 0 && (
           <>
             <Button
               style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
@@ -133,14 +129,14 @@ const BBAN_GIAO_KIMTable = ({
               style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
               onClick={() => {
                 setShowConfirmDialog(true);
-                setId(rowData.iD_BIENBAN);
+                setBienBan(rowData);
                 setIsMultiDelete(false);
               }}
             />
           </>
         )}
 
-        {rowData.tranG_THAI === 1 && (
+        {rowData.trang_thai === 1 && (
           <Button
             icon="pi pi-times"
             tooltip={"Hủy biên bản"}
@@ -154,8 +150,8 @@ const BBAN_GIAO_KIMTable = ({
         )}
 
         <Button
-          icon={`pi ${rowData.tranG_THAI !== 2 ? "pi-user-edit" : "pi-eye"} `}
-          tooltip={rowData.tranG_THAI !== 2 ? "Ký số" : "Xem chi tiết"}
+          icon={`pi ${rowData.trang_thai !== 2 ? "pi-user-edit" : "pi-eye"} `}
+          tooltip={rowData.trang_thai !== 2 ? "Ký số" : "Xem chi tiết"}
           tooltipOptions={{ position: "top" }}
           style={{
             backgroundColor: "#1445a7",
@@ -206,8 +202,9 @@ const BBAN_GIAO_KIMTable = ({
     handleFilterData(searchTerm);
   }, [searchTerm, data]);
   useEffect(() => {
-    console.log("data table", data);
-  }, [data]);
+    const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+    setUser(user);
+  }, []);
   return (
     <>
       <Panel headerTemplate={headerTemplate}>
@@ -238,7 +235,7 @@ const BBAN_GIAO_KIMTable = ({
           value={filteredArr}
           showGridlines
           stripedRows
-          rowkey="id"
+          rowkey="id_bienban"
           rows={pageSize}
           rowsPerPageOptions={[5, 10]}
           className="datatable-responsive"
@@ -273,13 +270,13 @@ const BBAN_GIAO_KIMTable = ({
           <Column
             sortable
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="sO_LUONG"
+            field="so_luong"
             header="Số lượng"
             className="min-w-10rem"
           ></Column>
           <Column
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="iD_KIM"
+            field="id_kim"
             header="Mã kìm"
             className="min-w-10rem"
           ></Column>
@@ -288,16 +285,16 @@ const BBAN_GIAO_KIMTable = ({
             field="trang_thai"
             header="Trạng thái"
             body={(rowData) => {
-              if (rowData.tranG_THAI === 0) {
+              if (rowData.trang_thai === 0) {
                 return "Soạn thảo";
               }
-              if (rowData.tranG_THAI === 1) {
+              if (rowData.trang_thai === 1) {
                 return "Ký cấp 1";
               }
-              if (rowData.tranG_THAI === 2) {
+              if (rowData.trang_thai === 2) {
                 return "Ký cấp 2";
               }
-              if (rowData.tranG_THAI === 3) {
+              if (rowData.trang_thai === 3) {
                 return "Bị hủy";
               }
             }}

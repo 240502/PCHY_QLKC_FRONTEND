@@ -79,22 +79,23 @@ export const BBanGiaoKimC3 = () => {
         loai_bban: options.loaiBienBan !== 2 ? options.loaiBienBan : "",
       };
       const res = await search_BBAN_BANGIAO_KIM(data);
+      console.log("bien ban", res?.data);
       let newBienBanArr = [];
 
       res?.data.forEach(async (bb, index) => {
         let nguoiNhan = {};
         let nguoiGiao = {};
-        if (bb?.nguoI_NHAN) {
+        if (bb?.nguoi_nhan) {
           try {
-            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoI_NHAN);
+            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoi_nhan);
             nguoiNhan = res;
           } catch (err) {
             console.log(err);
           }
         }
-        if (bb?.nguoI_GIAO) {
+        if (bb?.nguoi_giao) {
           try {
-            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoI_GIAO);
+            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoi_giao);
             nguoiGiao = res;
           } catch (err) {
             console.log(err);
@@ -144,8 +145,8 @@ export const BBanGiaoKimC3 = () => {
     } else {
       const filtered = bienBanArr.filter(
         (item) =>
-          item.nguoI_GIAO.toLowerCase().includes(content.toLowerCase()) ||
-          item.nguoI_NHAN.toLowerCase().includes(content.toLowerCase())
+          item.nguoi_giao.toLowerCase().includes(content.toLowerCase()) ||
+          item.nguoi_nhan.toLowerCase().includes(content.toLowerCase())
       );
       setFilteredArr(filtered);
     }

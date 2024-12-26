@@ -30,16 +30,23 @@ const BBAN_GIAO_KIMModal = ({
   const [selectedItems, setSelectedItems] = useState([]);
   const [phongBanArr, setPhongBanArr] = useState([]);
   const [user, setUser] = useState(HT_NGUOIDUNG);
+  const [newKimIds, setNewKimIds] = useState([]);
+  const [deletedKimIds, setDeletedKimIds] = useState([]);
   useEffect(() => {
+    //call api get all danh muc kim by ma_dviqly
     const getAllD_KIM = async () => {
       try {
-        const ma_dviqly = JSON.parse(
-          sessionStorage.getItem("current_MADVIQLY") || ""
-        );
+        let ma_dviqly = null;
+        if (!isUpdate) {
+          ma_dviqly = JSON.parse(
+            sessionStorage.getItem("current_MADVIQLY") || ""
+          );
+        }
         const res = await D_KIMService.get_All_D_KIMByMA_DVIQLY(ma_dviqly);
-        console.log(res);
-        if (bienBan?.iD_KIM) {
-          const selectedIds = bienBan.iD_KIM
+        console.log("danh muc kim", res);
+        // handle view selected kim when update bien ban
+        if (bienBan?.id_kim) {
+          const selectedIds = bienBan.id_kim
             .split(",")
             .map((item) => Number(item));
 
@@ -50,11 +57,11 @@ const BBAN_GIAO_KIMModal = ({
         console.log(err.message);
       }
     };
+
+    // call api get all danh muc phong ban by ma_dviqly
     const getAllD_PhongBan = async () => {
-      console.log("call api get phong ban");
       try {
         const res = await getDM_PHONGBANByMA_DVIQLY("PA23");
-        console.log("phong ban", res);
         setPhongBanArr(res);
       } catch (err) {
         console.log(err.message);
@@ -71,20 +78,17 @@ const BBAN_GIAO_KIMModal = ({
     };
   }, []);
 
+  // handle data before call api insert or update
   const handleData = () => {
     let newErrors;
-    if (!bienBan?.doN_VI_GIAO) {
-      console.log("err1", {
-        ...errors,
-        donViGiao: "Không được để trống ô này!",
-      });
+    if (!bienBan?.don_vi_giao) {
       newErrors = { ...newErrors, donViGiao: "Không được để trống ô này!" };
     }
-    if (!bienBan?.doN_VI_NHAN) {
+    if (!bienBan?.don_vi_nhan) {
       newErrors = { ...newErrors, donViNhan: "Không được để trống ô này!" };
     }
-    if (bienBan?.doN_VI_GIAO && bienBan.doN_VI_NHAN) {
-      if (bienBan?.doN_VI_GIAO === bienBan.doN_VI_NHAN) {
+    if (bienBan?.don_vi_giao && bienBan.don_vi_nhan) {
+      if (bienBan?.don_vi_giao === bienBan.don_vi_nhan) {
         newErrors = {
           ...newErrors,
           donViNhan: "Đơn vị giao và đơn vị nhận phải khác nhau!",
@@ -95,10 +99,10 @@ const BBAN_GIAO_KIMModal = ({
     if (selectedItems.length == 0) {
       newErrors = { ...newErrors, maKim: "Không được để trống ô này!" };
     }
-    if (!bienBan?.sO_LUONG && bienBan?.iD_BIENBAN) {
+    if (!bienBan?.so_luong && bienBan?.id_bienban) {
       newErrors = { ...newErrors, soLuong: "Không được để trống ô này!" };
     } else {
-      if (!/^\d+$/.test(bienBan?.sO_LUONG) && bienBan?.iD_BIENBAN) {
+      if (!/^\d+$/.test(bienBan?.so_luong) && bienBan?.id_bienban) {
         newErrors = {
           ...newErrors,
           soLuong: "Số lượng không bao gồm chữ, ký tự đặc biệt!",
@@ -110,35 +114,35 @@ const BBAN_GIAO_KIMModal = ({
     } else {
       if (isUpdate) {
         const data = {
-          don_vi_giao: bienBan?.doN_VI_GIAO,
+          don_vi_giao: bienBan?.don_vi_giao,
           nguoi_giao: bienBan.nguoi_giao,
-          nguoi_nhan: bienBan?.nguoI_NHAN,
-          don_vi_nhan: bienBan?.doN_VI_NHAN,
+          nguoi_nhan: bienBan?.nguoi_nhan,
+          don_vi_nhan: bienBan?.don_vi_nhan,
           so_luong: selectedItems.length,
           id_kim: selectedItems.join(","),
-          noi_dung: bienBan?.noI_DUNG,
-          id_bienban: bienBan?.iD_BIENBAN,
-          ngay_giao: bienBan?.ngaY_GIAO,
-          loai_bban: bienBan?.loaI_BBAN,
+          noi_dung: bienBan?.noi_dung,
+          id_bienban: bienBan?.id_bienban,
+          ngay_giao: bienBan?.ngay_giao,
+          loai_bban: bienBan?.loai_bban,
         };
-        console.log("new bien ban", data);
         update_BBAN(data);
       } else {
         const data = {
-          don_vi_giao: bienBan?.doN_VI_GIAO,
+          don_vi_giao: bienBan?.don_vi_giao,
           nguoi_giao: user.id,
           nguoi_nhan: "",
-          don_vi_nhan: bienBan?.doN_VI_NHAN,
-          so_luong: bienBan?.sO_LUONG ?? selectedItems.length,
+          don_vi_nhan: bienBan?.don_vi_nhan,
+          so_luong: bienBan?.so_luong ?? selectedItems.length,
           id_kim: selectedItems.join(","),
-          noi_dung: bienBan?.noI_DUNG,
-          loai_bban: bienBan?.loaI_BBAN,
+          noi_dung: bienBan?.noi_dung,
+          loai_bban: bienBan?.loai_bban,
         };
-        console.log("new bien ban", data);
         insert_BBAN(data);
       }
     }
   };
+
+  // call api insert bien ban ban giao kim
   const insert_BBAN = async (data) => {
     try {
       const res = await insert_BBAN_BANGIAO_KIM(data);
@@ -166,18 +170,101 @@ const BBAN_GIAO_KIMModal = ({
       console.log(err);
     }
   };
+
+  //call api update bien ban ban giao kim
   const update_BBAN = async (data) => {
     try {
-      console.log(data);
       const res = await update_QLKC_BBAN_BANGIAO_KIMChoDuyet(data);
       showToast("success", "Sửa thành công!");
       handleCloseModal();
       loadData();
+
+      if (deletedKimIds.length > 0) {
+        const dataUpdate = {
+          ht_nguoidung_id: user.id,
+          ma_dvigiao: "PA23",
+          id_kim: null,
+        };
+        deletedKimIds.forEach((item) => {
+          update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: item });
+        });
+      }
+      if (newKimIds.length > 0) {
+        const dataUpdate = {
+          ht_nguoidung_id: user.id,
+          ma_dvigiao: data.don_vi_nhan,
+          id_kim: null,
+        };
+        newKimIds.forEach((item) => {
+          update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: item });
+        });
+      }
     } catch (err) {
       console.log(err.message);
       showToast("error", "Sửa không thành công!");
     }
   };
+  const handleChangeSelectKim = (kimIds) => {
+    let existsIds = [];
+    let newKimIdsCopy = newKimIds;
+    let deletedIdsCopy = deletedKimIds;
+
+    if (bienBan?.id_kim?.length > 0) {
+      existsIds = bienBan.id_kim.split(",").map((item) => Number(item));
+    } else {
+      existsIds = [Number(bienBan.id_kim)];
+    }
+    // xử lý khi người dùng chọn thêm kìm mới
+    kimIds.forEach((item) => {
+      if (!existsIds.includes(item)) {
+        if (newKimIdsCopy.length > 0) {
+          if (!newKimIdsCopy.includes(item)) {
+            newKimIdsCopy = [...newKimIdsCopy, item];
+          }
+        } else {
+          newKimIdsCopy = [item];
+        }
+        setNewKimIds(newKimIdsCopy);
+      }
+    });
+
+    // xử lý nếu người dùng bỏ chọn lựa chọn kìm vừa chọn trước đó.
+    // Ví dụ người dùng vừa chọn mới 1 kìm có mã là 4 nhưng rồi lại bỏ chọn.
+    // Đoạn mã này xử lý việc loại bỏ các id bị bỏ chọn đó
+    newKimIdsCopy = newKimIdsCopy.filter((item) => kimIds.includes(item));
+    console.log("newKimIdsCopy", newKimIdsCopy);
+    //////////
+
+    // xử lý khi người dùng bỏ chọn kìm
+    if (kimIds.length > 0) {
+      existsIds.forEach((item) => {
+        if (!kimIds.includes(item)) {
+          if (deletedIdsCopy.length > 0) {
+            if (!deletedIdsCopy.includes(item)) {
+              deletedIdsCopy.push(item);
+            }
+          } else {
+            deletedIdsCopy = [item];
+          }
+          console.log("unselect", item);
+        }
+      });
+      setDeletedKimIds([...deletedIdsCopy]);
+    } else {
+      setDeletedKimIds([...existsIds]);
+    }
+    // xử lý nếu người dùng vừa bỏ chọn lựa chọn kìm nhưng sau đó lại chọn lại nó.
+    // Ví dụ người dùng vừa bỏ chọn  1 kìm có mã là 4 nhưng rồi lại chọn lại ngay sau đó.
+    // Đoạn mã này xử lý việc loại bỏ các id đó.
+    if (kimIds.length > 0) {
+      deletedIdsCopy = deletedIdsCopy.filter((item) => !kimIds.includes(item));
+      console.log("deletedIdsCopy", deletedIdsCopy);
+    } else {
+      console.log("deletedIdsCopy else", deletedIdsCopy);
+    }
+    //////////
+  };
+
   return (
     <Dialog
       className="w-6 md:w-5/12 lg:w-4/12"
@@ -191,14 +278,14 @@ const BBAN_GIAO_KIMModal = ({
         <div>
           <label className="block mb-2">Loại biên bản</label>
           <Dropdown
-            value={bienBan?.loaI_BBAN}
+            value={bienBan?.loai_bban}
             className="w-full"
             options={arrLoaiBienBan}
             placeholder="Chọn loại biên bản"
             showClear
             filter
             onChange={(e) => {
-              setBienBan({ ...bienBan, loaI_BBAN: e.value });
+              setBienBan({ ...bienBan, loai_bban: e.value });
             }}
           />
         </div>
@@ -209,15 +296,14 @@ const BBAN_GIAO_KIMModal = ({
             </label>
             <Dropdown
               className="mt-2 w-full"
-              value={bienBan?.doN_VI_GIAO}
+              value={bienBan?.don_vi_giao}
               options={phongBanArr}
               filter
               onChange={(e) => {
                 const donVi = donViArr.find((item) => item.id === e.value);
-                console.log(e.value);
                 setBienBan({
                   ...bienBan,
-                  doN_VI_GIAO: e.value,
+                  don_vi_giao: e.value,
                 });
               }}
               id="donViNhan"
@@ -238,7 +324,7 @@ const BBAN_GIAO_KIMModal = ({
             </label>
             <Dropdown
               className="mt-2 w-full"
-              value={bienBan?.doN_VI_NHAN}
+              value={bienBan?.don_vi_nhan}
               options={donViArr}
               onChange={(e) => {
                 const donVi = donViArr.find(
@@ -246,8 +332,7 @@ const BBAN_GIAO_KIMModal = ({
                 );
                 setBienBan({
                   ...bienBan,
-                  doN_VI_NHAN: e.value,
-                  nguoI_NHAN: donVi.ten,
+                  don_vi_nhan: e.value,
                 });
               }}
               optionLabel="ten"
@@ -274,7 +359,7 @@ const BBAN_GIAO_KIMModal = ({
               value={selectedItems}
               options={D_KIM}
               onChange={(e) => {
-                console.log(e.value);
+                handleChangeSelectKim(e.value);
                 setSelectedItems(e.value);
               }}
               placeholder="Chọn mã kìm"
@@ -300,7 +385,7 @@ const BBAN_GIAO_KIMModal = ({
               placeholder="Nhập số lượng kìm ..."
               value={selectedItems.length}
               onChange={(e) => {
-                setBienBan({ ...bienBan, sO_LUONG: e.target.value });
+                setBienBan({ ...bienBan, so_luong: e.target.value });
               }}
               onFocus={() => {
                 setErrors({ ...errors, soLuong: null });
@@ -319,9 +404,9 @@ const BBAN_GIAO_KIMModal = ({
             id="TEN"
             className="w-full"
             placeholder="Nội dung bàn giao ..."
-            value={bienBan?.noI_DUNG}
+            value={bienBan?.noi_dung}
             onChange={(e) => {
-              setBienBan({ ...bienBan, noI_DUNG: e.target.value });
+              setBienBan({ ...bienBan, noi_dung: e.target.value });
             }}
             type="text"
           />

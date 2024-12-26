@@ -11,7 +11,8 @@ import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOID
 import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
 import { updateNguoiNhan } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
 import { Button } from "primereact/button";
-import dayjs from "dayjs";
+import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
+
 import {
   update_QLKC_BBAN_BANGIAO_KIMKyC1,
   update_QLKC_BBAN_BANGIAO_KIMKyC2,
@@ -28,11 +29,6 @@ const BienBanViewer = ({
 }) => {
   const [users, setUsers] = useState([HT_NGUOIDUNG]);
   const [events, setEvents] = useState([
-    {
-      status: "Soạn thảo",
-      date: "02/12/2024 10:30",
-      user: "Nguyễn Văn Sang",
-    },
     {
       status: "Ký cấp 1",
       user: "Nguyễn Văn Sang",
@@ -63,6 +59,7 @@ const BienBanViewer = ({
       console.log(err.message);
     }
   };
+
   const signC2 = async (id) => {
     try {
       const res = await update_QLKC_BBAN_BANGIAO_KIMKyC2(id);
@@ -79,7 +76,7 @@ const BienBanViewer = ({
     const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
       try {
         const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(
-          bienBan.doN_VI_NHAN
+          bienBan.don_vi_nhan
         );
         setUsers(res);
       } catch (e) {
@@ -93,25 +90,18 @@ const BienBanViewer = ({
   useEffect(() => {
     setEvents((prv) =>
       prv.map((e) => {
-        if (e.status === "Soạn thảo") {
-          return {
-            ...e,
-            user: bienBan?.ten_nguoi_giao,
-            date: bienBan?.ngaY_GIAO,
-          };
-        }
         if (
           e.status === "Ký cấp 2" &&
-          (bienBan?.tranG_THAI === 1 || bienBan?.tranG_THAI === 2)
+          (bienBan?.trang_thai === 1 || bienBan?.trang_thai === 2)
         ) {
           return {
             ...e,
             user: bienBan?.ten_nguoi_nhan,
 
-            date: bienBan?.ngaY_NHAN,
+            date: bienBan?.ngay_nhan,
           };
         }
-        if (e.status === "Ký cấp 2" && bienBan?.tranG_THAI === 0) {
+        if (e.status === "Ký cấp 2" && bienBan?.trang_thai === 0) {
           return {
             ...e,
             user: bienBan?.ten_nguoi_nhan,
@@ -120,13 +110,13 @@ const BienBanViewer = ({
 
         if (
           e.status === "Ký cấp 1" &&
-          (bienBan?.tranG_THAI === 1 || bienBan?.tranG_THAI === 2)
+          (bienBan?.trang_thai === 1 || bienBan?.trang_thai === 2)
         ) {
           return {
             ...e,
             user: bienBan?.ten_nguoi_giao,
 
-            date: bienBan?.ngaY_GIAO,
+            date: bienBan?.ngay_giao,
           };
         } else {
           return {
@@ -141,7 +131,7 @@ const BienBanViewer = ({
     try {
       const data = {
         ht_nguoidung_id: userId,
-        bienban_id: bienBan.iD_BIENBAN,
+        bienban_id: bienBan.id_bienban,
       };
       const res = await updateNguoiNhan(data);
       loadData();
@@ -195,7 +185,7 @@ const BienBanViewer = ({
               <>Đơn vị giao:</>{" "}
             </label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.teN_PB.toUpperCase()}</strong>{" "}
+              <strong>{bienBan.ten_pb.toUpperCase()}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
@@ -203,7 +193,7 @@ const BienBanViewer = ({
               <>Đơn vị nhận:</>{" "}
             </label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.teN_DV.toUpperCase()}</strong>{" "}
+              <strong>{bienBan.ten_dv.toUpperCase()}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
@@ -218,12 +208,12 @@ const BienBanViewer = ({
             <label style={{ width: "25%" }}>Người nhận:</label>
             <label style={{ width: "75%" }}>
               <Dropdown
-                value={bienBan?.nguoI_NHAN}
+                value={bienBan?.nguoi_nhan}
                 className="w-full"
                 options={users}
                 placeholder="Chọn"
                 filter
-                disabled={bienBan?.tranG_THAI === 2 ? true : false}
+                disabled={bienBan?.trang_thai === 2 ? true : false}
                 optionValue="id"
                 optionLabel="hO_TEN"
                 onChange={(e) => {
@@ -231,7 +221,7 @@ const BienBanViewer = ({
                   console.log("user", user);
                   setBienBan({
                     ...bienBan,
-                    nguoI_NHAN: e.value,
+                    nguoi_nhan: e.value,
                     ten_nguoi_nhan: user.hO_TEN,
                   });
                   update_NguoiNhan(e.value);
@@ -242,7 +232,7 @@ const BienBanViewer = ({
           <div className="flex justify-content-between align-items-center mb-3">
             <label style={{ width: "25%" }}>Số lượng:</label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.sO_LUONG}</strong>{" "}
+              <strong>{bienBan.so_luong}</strong>{" "}
             </label>
           </div>
 
@@ -285,10 +275,10 @@ const BienBanViewer = ({
             className="me-3"
             style={{ marginRight: "10px" }}
             onClick={() => {
-              if (bienBan?.tranG_THAI === 0) {
-                signC1(bienBan?.iD_BIENBAN);
+              if (bienBan?.trang_thai === 0) {
+                signC1(bienBan?.id_bienban);
               } else {
-                signC2(bienBan?.iD_BIENBAN);
+                signC2(bienBan?.id_bienban);
               }
             }}
           />
