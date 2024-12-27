@@ -43,6 +43,8 @@ const BBAN_GIAO_KIMTable = ({
   const [isMultiDelete, setIsMultiDelete] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showConfirmCancelDialog, setShowConfirmCancelDialog] = useState(false);
+
   const [bienBan, setBienBan] = useState(QLKC_BBAN_BANGIAO_KIM);
   const rowPerPageOptions = [5, 10, 15];
   const [user, setUser] = useState(HT_NGUOIDUNG);
@@ -56,11 +58,25 @@ const BBAN_GIAO_KIMTable = ({
   //Xử lý xóa bản ghi
   const acceptDelete = async () => {
     if (isMultiDelete) {
-      let i = 0;
-      selectedRecords.forEach(async (record) => {
-        i += 1;
+      selectedRecords.forEach(async (record, index) => {
         try {
           const res = await delete_QLKC_BBAN_BANGIAO_KIM(record.id_bienban);
+          const kimId =
+            record.id_kim.length === 1
+              ? [Number(record.id_kim)]
+              : record.id_kim.split(",").map((item) => Number(item));
+          if (kimId.length > 1) {
+            const dataUpdate = {
+              ht_nguoidung_id: user.id,
+              ma_dvigiao: "PA23",
+              id_kim: null,
+            };
+            kimId.forEach((id) => {
+              update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: id });
+            });
+          } else {
+            update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: kimId });
+          }
           setShowConfirmDialog(false);
           showToast("success", "Xóa thành công!");
         } catch (err) {
@@ -68,14 +84,33 @@ const BBAN_GIAO_KIMTable = ({
           showToast("error", "Xóa không thành công!");
           console.log(err.message);
         }
+        console.log(index + 1);
+        console.log(selectedRecords.length);
+        if (index + 1 === selectedRecords.length) {
+          console.log("oke");
+          loadData();
+          setSelectedRecords([]);
+        }
       });
-      if (i === selectedRecords.length) {
-        loadData();
-        setSelectedRecords([]);
-      }
     } else {
       try {
         const res = await delete_QLKC_BBAN_BANGIAO_KIM(bienBan?.id_bienban);
+        const kimId =
+          bienBan.id_kim.length === 1
+            ? [Number(bienBan.id_kim)]
+            : bienBan.id_kim.split(",").map((item) => Number(item));
+        if (kimId.length > 1) {
+          const dataUpdate = {
+            ht_nguoidung_id: user.id,
+            ma_dvigiao: "PA23",
+            id_kim: null,
+          };
+          kimId.forEach((id) => {
+            update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: id });
+          });
+        } else {
+          update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: kimId });
+        }
         setShowConfirmDialog(false);
         showToast("success", "Xóa thành công!");
         loadData();
@@ -92,23 +127,41 @@ const BBAN_GIAO_KIMTable = ({
   };
 
   // Gọi api hủy biên bản
-  const rejectBienBan = async (bienBan) => {
+  const rejectBienBan = async () => {
     try {
+      console.log("bien ban", bienBan);
       const kimId =
-        bienBan.iD_KIM.length === 1
-          ? [Number(bienBan.iD_KIM)]
-          : bienBan.iD_KIM.split[","];
-
-      handleUpdateMaDviqlyD_KIM(kimId);
-      // const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.iD_BIENBAN);
-      //showToast("success", "Cập nhập thành công!");
-      //loadData();
+        bienBan.id_kim.length === 1
+          ? [Number(bienBan.id_kim)]
+          : bienBan.id_kim.split(",").map((item) => Number(item));
+      if (kimId.length > 1) {
+        const dataUpdate = {
+          ht_nguoidung_id: user.id,
+          ma_dvigiao: "PA23",
+          id_kim: null,
+        };
+        kimId.forEach((id) => {
+          update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: id });
+        });
+      } else {
+        update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: kimId });
+      }
+      const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.id_bienban);
+      showToast("success", "Cập nhập thành công!");
+      loadData();
     } catch (err) {
       showToast("error", "Cập nhập không thành công!");
       console.log(err.message);
     }
   };
-
+  const update_MA_DVIQLY_D_KIM = async (id_kim) => {
+    try {
+      const res = await D_KIMService.update_MA_DVIQLY(id_kim);
+      console.log(res);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   //Render button in table
   const buttonOption = (rowData) => {
     return rowData.trang_thai !== 3 ? (
@@ -146,8 +199,8 @@ const BBAN_GIAO_KIMTable = ({
             tooltipOptions={{ position: "top" }}
             style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
             onClick={() => {
-              rejectBienBan(rowData);
-              //setShowConfirmDialog(true);
+              setShowConfirmCancelDialog(true);
+              setBienBan(rowData);
             }}
           />
         )}
@@ -376,6 +429,34 @@ const BBAN_GIAO_KIMTable = ({
               label="Đồng ý"
               icon="pi pi-check"
               onClick={acceptDelete}
+              autoFocus
+            />
+          </div>
+        }
+      >
+        <div className="card flex flex-wrap gap-2 justify-content-center"></div>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        visible={showConfirmCancelDialog}
+        onHide={() => setShowConfirmCancelDialog(false)}
+        header="Xác nhận"
+        message={"Bạn có chắc chắn hủy bản ghi này không?"}
+        icon="pi pi-info-circle"
+        footer={
+          <div>
+            <Button
+              severity="secondary"
+              outlined
+              label="Hủy"
+              icon="pi pi-times"
+              onClick={() => setShowConfirmCancelDialog(false)}
+            />
+            <Button
+              severity="danger"
+              label="Đồng ý"
+              icon="pi pi-check"
+              onClick={rejectBienBan}
               autoFocus
             />
           </div>

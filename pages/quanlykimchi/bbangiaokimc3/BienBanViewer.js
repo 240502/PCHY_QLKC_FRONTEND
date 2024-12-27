@@ -47,6 +47,9 @@ const BienBanViewer = ({
       console.log(err);
     }
   };
+  const current_MADVIQLY = JSON.parse(
+    sessionStorage.getItem("current_MADVIQLY")
+  );
   const signC1 = async (id) => {
     try {
       const res = await update_QLKC_BBAN_BANGIAO_KIMKyC1(id);
@@ -275,10 +278,13 @@ const BienBanViewer = ({
             className="me-3"
             style={{ marginRight: "10px" }}
             onClick={() => {
-              if (bienBan?.trang_thai === 0) {
+              if (bienBan?.trang_thai === 0 && current_MADVIQLY === "PA23") {
                 signC1(bienBan?.id_bienban);
               } else {
-                signC2(bienBan?.id_bienban);
+                if (bienBan?.trang_thai !== 1 && current_MADVIQLY === "PA23") {
+                  signC2(bienBan?.id_bienban);
+                } else {
+                }
               }
             }}
           />

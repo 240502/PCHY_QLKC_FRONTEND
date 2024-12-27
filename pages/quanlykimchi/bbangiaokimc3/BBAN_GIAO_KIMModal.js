@@ -170,9 +170,9 @@ const BBAN_GIAO_KIMModal = ({
       showToast("error", "Thêm không thành công!");
     }
   };
-  const update_MA_DVIQLY_D_KIM = async (id_kim) => {
+  const update_MA_DVIQLY_D_KIM = async (data) => {
     try {
-      const res = await D_KIMService.update_MA_DVIQLY(id_kim);
+      const res = await D_KIMService.update_MA_DVIQLY(data);
       console.log(res);
     } catch (err) {
       console.log(err);
