@@ -46,6 +46,9 @@ const BBAN_GIAO_KIMTable = ({
   const [bienBan, setBienBan] = useState(QLKC_BBAN_BANGIAO_KIM);
   const rowPerPageOptions = [5, 10, 15];
   const [user, setUser] = useState(HT_NGUOIDUNG);
+  const current_MADVIQLY = JSON.parse(
+    sessionStorage.getItem("current_MADVIQLY")
+  );
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -171,31 +174,35 @@ const BBAN_GIAO_KIMTable = ({
   const headerTemplate = (options) => {
     const className = `${options.className} flex flex-wrap justify-content-between align-items-center gap-2`;
     return (
-      <div className={className}>
-        <span className="text-xl font-bold">Danh sách</span>
-        <div className="flex flex-column sm:flex-row gap-3">
-          {selectedRecords.length > 0 && (
-            <Button
-              label="Xóa nhiều"
-              severity="danger"
-              onClick={() => {
-                setShowConfirmDialog(true);
-                setIsMultiDelete(true);
-              }}
-              disabled={!selectedRecords.length}
-            />
-          )}
+      <>
+        {current_MADVIQLY === "PA23" && (
+          <div className={className}>
+            <span className="text-xl font-bold">Danh sách</span>
+            <div className="flex flex-column sm:flex-row gap-3">
+              {selectedRecords.length > 0 && (
+                <Button
+                  label="Xóa nhiều"
+                  severity="danger"
+                  onClick={() => {
+                    setShowConfirmDialog(true);
+                    setIsMultiDelete(true);
+                  }}
+                  disabled={!selectedRecords.length}
+                />
+              )}
 
-          <Button
-            label="Thêm mới"
-            style={{ backgroundColor: "#1445a7" }}
-            onClick={() => {
-              handleOpenModal();
-              // setIsUpdate(false);
-            }}
-          />
-        </div>
-      </div>
+              <Button
+                label="Thêm mới"
+                style={{ backgroundColor: "#1445a7" }}
+                onClick={() => {
+                  handleOpenModal();
+                  // setIsUpdate(false);
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </>
     );
   };
   useEffect(() => {

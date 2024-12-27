@@ -35,7 +35,9 @@ export const BBanGiaoKimC3 = () => {
     loaiBienBan: 2,
   });
   const toast = useRef(null);
-
+  const current_MADVIQLY = JSON.parse(
+    sessionStorage.getItem("current_MADVIQLY")
+  );
   // show toast function
   const showToast = (type, message) => {
     toast.current.show({
@@ -67,9 +69,6 @@ export const BBanGiaoKimC3 = () => {
   // call api get bban_bangiao_kim
   const loadDataTable = async () => {
     try {
-      const current_MADVIQLY = JSON.parse(
-        sessionStorage.getItem("current_MADVIQLY")
-      );
       const data = {
         pageIndex: pageIndex,
         pageSize: pageSize,
@@ -77,6 +76,7 @@ export const BBanGiaoKimC3 = () => {
         don_vi_giao: options.donViGiao,
         trang_thai: options.trangThai,
         loai_bban: options.loaiBienBan !== 2 ? options.loaiBienBan : "",
+        don_vi: current_MADVIQLY === "PA23" ? "" : current_MADVIQLY,
       };
       const res = await search_BBAN_BANGIAO_KIM(data);
       console.log("bien ban", res?.data);

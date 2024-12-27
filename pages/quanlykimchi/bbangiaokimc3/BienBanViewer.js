@@ -268,7 +268,7 @@ const BienBanViewer = ({
         </div>
       </div>
       <div className="flex justify-content-end" style={{ marginTop: "20px" }}>
-        {bienBan?.tranG_THAI !== 2 && (
+        {bienBan?.trang_thai !== 2 && (
           <Button
             label="Ký số"
             severity="success"

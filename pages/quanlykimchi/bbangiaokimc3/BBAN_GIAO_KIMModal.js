@@ -36,13 +36,21 @@ const BBAN_GIAO_KIMModal = ({
     //call api get all danh muc kim by ma_dviqly
     const getAllD_KIM = async () => {
       try {
-        let ma_dviqly = null;
+        let ma_dviqly = "";
         if (!isUpdate) {
           ma_dviqly = JSON.parse(
             sessionStorage.getItem("current_MADVIQLY") || ""
           );
         }
-        const res = await D_KIMService.get_All_D_KIMByMA_DVIQLY(ma_dviqly);
+        let kimIds = "";
+        if (isUpdate) {
+          kimIds = bienBan.id_kim;
+        }
+        const data = {
+          ma_dviqly: ma_dviqly,
+          kimIds: kimIds,
+        };
+        const res = await D_KIMService.get_All_D_KIMByMA_DVIQLY(data);
         console.log("danh muc kim", res);
         // handle view selected kim when update bien ban
         if (bienBan?.id_kim) {

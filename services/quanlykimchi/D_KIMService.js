@@ -5,10 +5,8 @@ export const D_KIMService = {
     const res = await apiClient.post("/D_KIM/search_D_KIM", data);
     return res?.data;
   },
-  async get_All_D_KIMByMA_DVIQLY(ma_dviqly) {
-    const res = await apiClient.get(
-      "/D_KIM/get_D_KIMByMA_DVIQLY?ma_dviqly=" + ma_dviqly
-    );
+  async get_All_D_KIMByMA_DVIQLY(data) {
+    const res = await apiClient.post("/D_KIM/get_D_KIMByMA_DVIQLY", data);
     return res?.data;
   },
   async update_MA_DVIQLY(data) {
