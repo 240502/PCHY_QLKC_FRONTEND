@@ -17,6 +17,7 @@ const arrTrangThai = [
   { label: "Ký cấp 2", value: 2 },
 ];
 export const BBanGiaoKimC3 = () => {
+  const currentMenu = sessionStorage.getItem("currentMenu");
   const [pageIndex, setPageIndex] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [donViArr, setDonViArr] = useState([]);
@@ -170,7 +171,7 @@ export const BBanGiaoKimC3 = () => {
       <Toast ref={toast} />
       <div className="col-12">
         <div className="card">
-          <Panel header="Tìm kiếm" className="mb-4">
+          <Panel header={currentMenu} className="mb-4">
             <Divider style={{ marginTop: "0", marginBottom: "10px" }} />
             <div className="flex flex-column lg:flex-row gap-3">
               <div className="flex-auto">

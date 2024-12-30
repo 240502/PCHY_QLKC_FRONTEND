@@ -149,8 +149,11 @@ const BBAN_GIAO_KIMTable = ({
       const res = await cancel_QLKC_BBAN_BANGIAO_KIM(bienBan.id_bienban);
       showToast("success", "Cập nhập thành công!");
       loadData();
+      setShowConfirmCancelDialog(false);
     } catch (err) {
       showToast("error", "Cập nhập không thành công!");
+      setShowConfirmCancelDialog(false);
+
       console.log(err.message);
     }
   };
@@ -166,7 +169,7 @@ const BBAN_GIAO_KIMTable = ({
   const buttonOption = (rowData) => {
     return rowData.trang_thai !== 3 ? (
       <div className="flex">
-        {rowData.trang_thai === 0 && (
+        {rowData.trang_thai === 0 && current_MADVIQLY === "PA23" && (
           <>
             <Button
               style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
@@ -192,7 +195,7 @@ const BBAN_GIAO_KIMTable = ({
           </>
         )}
 
-        {rowData.trang_thai === 1 && (
+        {rowData.trang_thai === 1 && current_MADVIQLY === "PA23" && (
           <Button
             icon="pi pi-times"
             tooltip={"Hủy biên bản"}
@@ -204,10 +207,24 @@ const BBAN_GIAO_KIMTable = ({
             }}
           />
         )}
+        {console.log(
+          rowData.trang_thai !== 0 &&
+            (current_MADVIQLY !== "PA23" || current_MADVIQLY === "PA23")
+        )}
 
         <Button
-          icon={`pi ${rowData.trang_thai !== 2 ? "pi-user-edit" : "pi-eye"} `}
-          tooltip={rowData.trang_thai !== 2 ? "Ký số" : "Xem chi tiết"}
+          icon={`pi ${
+            (rowData.trang_thai === 0 && current_MADVIQLY === "PA23") ||
+            (current_MADVIQLY !== "PA23" && rowData.trang_thai === 1)
+              ? "pi-user-edit"
+              : "pi-eye"
+          } `}
+          tooltip={
+            (rowData.trang_thai === 0 && current_MADVIQLY === "PA23") ||
+            (current_MADVIQLY !== "PA23" && rowData.trang_thai === 1)
+              ? "Ký số"
+              : "Xem chi tiết"
+          }
           tooltipOptions={{ position: "top" }}
           style={{
             backgroundColor: "#1445a7",

@@ -129,6 +129,10 @@ const BienBanViewer = ({
         }
       })
     );
+    console.log(
+      "bien ban",
+      bienBan.trang_thai === 0 && current_MADVIQLY === "PA23"
+    );
   }, [bienBan]);
   const update_NguoiNhan = async (userId) => {
     try {
@@ -216,7 +220,7 @@ const BienBanViewer = ({
                 options={users}
                 placeholder="Chọn"
                 filter
-                disabled={bienBan?.trang_thai === 2 ? true : false}
+                disabled={bienBan?.trang_thai !== 0 ? true : false}
                 optionValue="id"
                 optionLabel="hO_TEN"
                 onChange={(e) => {
@@ -271,20 +275,19 @@ const BienBanViewer = ({
         </div>
       </div>
       <div className="flex justify-content-end" style={{ marginTop: "20px" }}>
-        {bienBan?.trang_thai !== 2 && (
+        {((bienBan.trang_thai === 0 && current_MADVIQLY === "PA23") ||
+          (bienBan.trang_thai === 1 && current_MADVIQLY !== "PA23")) && (
           <Button
             label="Ký số"
             severity="success"
             className="me-3"
             style={{ marginRight: "10px" }}
             onClick={() => {
-              if (bienBan?.trang_thai === 0 && current_MADVIQLY === "PA23") {
+              if (bienBan.trang_thai === 0 && current_MADVIQLY === "PA23") {
                 signC1(bienBan?.id_bienban);
-              } else {
-                if (bienBan?.trang_thai !== 1 && current_MADVIQLY === "PA23") {
-                  signC2(bienBan?.id_bienban);
-                } else {
-                }
+              }
+              if (bienBan.trang_thai === 1 && current_MADVIQLY !== "PA23") {
+                signC2(bienBan?.id_bienban);
               }
             }}
           />
