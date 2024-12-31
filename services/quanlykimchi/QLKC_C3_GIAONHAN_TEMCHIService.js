@@ -45,14 +45,14 @@ export const getAll_QLKC_C3_GIAONHAN_TEMCHI = async () => {
   return res.data;
 };
 
-export const update_kyC1_PM_QLKC_C3_GIAONHAN_TEMCHI = async (id) => {
+export const update_kyC1_PM_C3_GIAONHAN_TEMCHI = async (id) => {
   const res = await apiClient.put(
     "/C3_GIAONHAN_TEMCHI/update_kyC1_PM_QLKC_C3_GIAONHAN_TEMCHI?id=" + id
   );
   return res;
 };
 
-export const update_kyC1_PQT_QLKC_C3_GIAONHAN_TEMCHI = async (id) => {
+export const update_kyC1_PQT_C3_GIAONHAN_TEMCHI = async (id) => {
   const res = await apiClient.put(
     "/C3_GIAONHAN_TEMCHI/update_kyC1_PQT_QLKC_C3_GIAONHAN_TEMCHI?id=" + id
   );
@@ -68,12 +68,12 @@ export const update_kyC2_PQT_C3_GIAONHAN_TEMCHI = async (id) => {
 
 export const update_kyC2_PM_C3_GIAONHAN_TEMCHI = async (id) => {
   const res = await apiClient.put(
-    "/C3_GIAONHAN_TEMCHI/update_kyC2_PM_C3_GIAONHAN_TEMCHIid=" + id
+    "/C3_GIAONHAN_TEMCHI/update_kyC2_PM_QLKC_C3_GIAONHAN_TEMCHI?id=" + id
   );
   return res;
 };
 
-export const update_TL_PM_QLKC_C3_GIAONHAN_TEMCHI = async (id) => {
+export const update_TL_PM_C3_GIAONHAN_TEMCHI = async (id) => {
   const res = await apiClient.put(
     "/C3_GIAONHAN_TEMCHI/update_TL_PM_QLKC_C3_GIAONHAN_TEMCHI=" + id
   );
@@ -87,16 +87,16 @@ export const update_TL_PQT_C3_GIAONHAN_TEMCHI = async (id) => {
   return res;
 };
 
-export const update_huyPM_QLKC_C3_GIAONHAN_TEMCHI = async (id) => {
+export const update_huyPM_C3_GIAONHAN_TEMCHI = async (id) => {
   const res = await apiClient.put(
     "/C3_GIAONHAN_TEMCHI/update_huyPM_QLKC_C3_GIAONHAN_TEMCHI?id=" + id
   );
   return res;
 };
 
-export const update_loaiBBan_QLKC_C3_GIAONHAN_TEMCHI = async (id) => {
+export const update_loaiBBan_C3_GIAONHAN_TEMCHI = async (id) => {
   const res = await apiClient.put(
-    "/C3_GIAONHAN_TEMCHI/update_loaiBBan_QLKC_C3_GIAONHAN_TEMCHI?id=" + id
+    "/C3_GIAONHAN_TEMCHI/update_LoaiBBan_QLKC_C3_GIAONHAN_TEMCHI?id=" + id
   );
   return res;
 };

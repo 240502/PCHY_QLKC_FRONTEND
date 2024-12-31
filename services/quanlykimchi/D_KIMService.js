@@ -31,8 +31,12 @@ export const delete_D_KIM = async (id) => {
 };
 
 export const get_D_KIM_ById = async (id) => {
-  const res = await apiClient.get("/D_KIM/get_D_KIM_ByID?ID=" + id);
-  return res.data;
+  try {
+    const res = await apiClient.get("/D_KIM/get_D_KIM_ByID?id_kim=" + id);
+    return res.data;
+  } catch (err) {
+    console.log(err.message);
+  }
 };
 
 export const getAll_D_KIM = async () => {

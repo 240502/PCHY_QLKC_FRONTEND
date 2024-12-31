@@ -14,7 +14,10 @@ import {
   update_QLKC_BBAN_BANGIAO_KIMKyC1,
   update_QLKC_BBAN_BANGIAO_KIMKyC2,
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
-import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
+import {
+  D_KIMService,
+  get_D_KIM_ById,
+} from "../../../services/quanlykimchi/D_KIMService";
 import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
 import { QLKC_BBAN_BANGIAO_KIM } from "../../../models/QLKC_BBAN_BANGIAO_KIM";
 const arrLoaiBienBan = [
@@ -282,6 +285,21 @@ const BBAN_GIAO_KIMTable = ({
     const user = JSON.parse(sessionStorage.getItem("user") || "{}");
     setUser(user);
   }, []);
+  const [kimArr, setKimArr] = useState([]);
+
+  const getKimById = async (id_kim) => {
+    console.log(id_kim);
+    if (id_kim.length > 0) {
+      const idKimArr = id_kim.split(",").map((item) => Number(item));
+      const fetchData = async () => {
+        const results = await Promise.all(
+          idKimArr.map((item) => get_D_KIM_ById(item))
+        );
+        setKimArr(results);
+      };
+      fetchData();
+    }
+  };
   return (
     <>
       <Panel headerTemplate={headerTemplate}>
@@ -291,7 +309,6 @@ const BBAN_GIAO_KIMTable = ({
               value={options.loaiBienBan}
               options={arrLoaiBienBan}
               placeholder="Chọn loại biên bản"
-              showClear
               onChange={(e) => {
                 setOptions({ ...options, loaiBienBan: e.value });
                 setOptions({ ...options, loaiBienBan: e.value });
@@ -329,13 +346,52 @@ const BBAN_GIAO_KIMTable = ({
               color: "#fff",
             }}
           ></Column>
-
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ten_pb"
+            header="Đơn vị giao"
+            className="min-w-10rem"
+            body={(rowData) => rowData.ten_pb.toUpperCase()}
+          ></Column>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ten_dv"
+            header="Đơn vị nhận"
+            className="min-w-10rem"
+            body={(rowData) => rowData.ten_dv.toUpperCase()}
+          ></Column>
           <Column
             {...propSortAndFilter}
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
             field="ten_nguoi_giao"
             header="Người giao"
             className="min-w-10rem"
+            body={(rowData) => {
+              if (rowData.trang_thai === 0) {
+                return (
+                  <>
+                    <p>{rowData.ten_nguoi_giao}</p>
+                    <p>Chưa ký</p>
+                  </>
+                );
+              } else {
+                return (
+                  <div>
+                    <p>{rowData.ten_nguoi_giao}</p>
+                    <p>
+                      Đã ký {new Date(rowData.ngay_giao).getDate()}-
+                      {new Date(rowData.ngay_giao).getMonth()}-
+                      {new Date(rowData.ngay_giao).getFullYear()}{" "}
+                      {new Date(rowData.ngay_giao).getHours()}:
+                      {new Date(rowData.ngay_giao).getMinutes()}:
+                      {new Date(rowData.ngay_giao).getSeconds()}
+                    </p>
+                  </div>
+                );
+              }
+            }}
           ></Column>
           <Column
             {...propSortAndFilter}
@@ -343,6 +399,30 @@ const BBAN_GIAO_KIMTable = ({
             field="ten_nguoi_nhan"
             header="Người nhận"
             className="min-w-8rem"
+            body={(rowData) => {
+              if (rowData.trang_thai !== 2) {
+                return (
+                  <>
+                    <p>{rowData.ten_nguoi_nhan}</p>
+                    <p>Chưa ký</p>
+                  </>
+                );
+              } else {
+                return (
+                  <div>
+                    <p>{rowData.ten_nguoi_nhan}</p>
+                    <p>
+                      Đã ký {new Date(rowData.ngay_nhan).getDate()}-
+                      {new Date(rowData.ngay_nhan).getMonth()}-
+                      {new Date(rowData.ngay_nhan).getFullYear()}{" "}
+                      {new Date(rowData.ngay_nhan).getHours()}:
+                      {new Date(rowData.ngay_nhan).getMinutes()}:
+                      {new Date(rowData.ngay_nhan).getSeconds()}
+                    </p>
+                  </div>
+                );
+              }
+            }}
           ></Column>
           <Column
             sortable
@@ -356,26 +436,9 @@ const BBAN_GIAO_KIMTable = ({
             field="id_kim"
             header="Mã kìm"
             className="min-w-10rem"
-          ></Column>
-          <Column
-            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="trang_thai"
-            header="Trạng thái"
             body={(rowData) => {
-              if (rowData.trang_thai === 0) {
-                return "Soạn thảo";
-              }
-              if (rowData.trang_thai === 1) {
-                return "Ký cấp 1";
-              }
-              if (rowData.trang_thai === 2) {
-                return "Ký cấp 2";
-              }
-              if (rowData.trang_thai === 3) {
-                return "Bị hủy";
-              }
+              return rowData.id_kim;
             }}
-            className="min-w-8rem"
           ></Column>
           <Column
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}

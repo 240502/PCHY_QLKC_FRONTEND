@@ -3,7 +3,6 @@ import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 import { Viewer, Worker } from "@react-pdf-viewer/core";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
-import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { Dialog } from "primereact/dialog";
 import { Timeline } from "primereact/timeline";
@@ -38,15 +37,7 @@ const BienBanViewer = ({
       user: "Nguyễn Văn Sang",
     },
   ]);
-  const [newBienBan, setNewBienBan] = useState(QLKC_BBAN_BANGIAO_KIM);
-  const getBienBanById = async (id) => {
-    try {
-      const res = await get_BBAN_ById(id);
-      setNewBienBan(res);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+
   const current_MADVIQLY = JSON.parse(
     sessionStorage.getItem("current_MADVIQLY")
   );
@@ -54,7 +45,7 @@ const BienBanViewer = ({
     try {
       const res = await update_QLKC_BBAN_BANGIAO_KIMKyC1(id);
       showToast("success", "Ký thành công!");
-      getBienBanById(id);
+      // getBienBanById(id);
       loadData();
       handleCloseModalViewer();
     } catch (err) {
@@ -66,8 +57,9 @@ const BienBanViewer = ({
   const signC2 = async (id) => {
     try {
       const res = await update_QLKC_BBAN_BANGIAO_KIMKyC2(id);
+      console.log(res);
       showToast("success", "Ký thành công!");
-      getBienBanById(id);
+      // getBienBanById(id);
       loadData();
       handleCloseModalViewer();
     } catch (err) {
@@ -220,7 +212,11 @@ const BienBanViewer = ({
                 options={users}
                 placeholder="Chọn"
                 filter
-                disabled={bienBan?.trang_thai !== 0 ? true : false}
+                disabled={
+                  bienBan?.trang_thai !== 0 || current_MADVIQLY !== "PA23"
+                    ? true
+                    : false
+                }
                 optionValue="id"
                 optionLabel="hO_TEN"
                 onChange={(e) => {
@@ -283,11 +279,10 @@ const BienBanViewer = ({
             className="me-3"
             style={{ marginRight: "10px" }}
             onClick={() => {
-              if (bienBan.trang_thai === 0 && current_MADVIQLY === "PA23") {
-                signC1(bienBan?.id_bienban);
-              }
-              if (bienBan.trang_thai === 1 && current_MADVIQLY !== "PA23") {
-                signC2(bienBan?.id_bienban);
+              if (bienBan.trang_thai === 0 && current_MADVIQLY == "PA23") {
+                signC1(bienBan.id_bienban);
+              } else {
+                signC2(bienBan.id_bienban);
               }
             }}
           />

@@ -2,39 +2,33 @@ import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import React, { useEffect, useState, useRef } from "react";
 import "primeicons/primeicons.css";
-import TableDM_C3 from "./TableDM_C3";
-import InputDM_C3Modal from "./InputDM_C3Modal";
 import { Dropdown } from "primereact/dropdown";
 import { Divider } from "primereact/divider";
 import { Panel } from "primereact/panel";
+import { TableDM_C3 } from "./TableDM_C3";
+import { InputDM_C3Modal } from "./InputDM_C3Modal";
+import { QLKC_C3_GIAONHAN_TEMCHI} from "../../../models/QLKC_C3_GIAONHAN_TEMCHI";
+import { search_QLKC_C3_GIAONHAN_TEMCHI } from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
+// import BienBanViewer from "./BienBanViewer";
 
-import { QLKC_C3_GIAONHAN_TEMCHI } from "../../../models/QLKC_C3_GIAONHAN_TEMCHI";
-import { getAll_QLKC_C3_GIAONHAN_TEMCHI, search_QLKC_C3_GIAONHAN_TEMCHI } from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
-
-const GiaoNhanTemChi = () => {
+const GiaoNhanTemChiC3 = () => {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [pageCount, setPageCount] = useState(0);
   const [dsDonvi, setDsDonvi] = useState([]);
-
   const [options, setOptions] = useState({
+    loai: "",
+    trang_thai: "",
     don_vi_giao: "",
-    nguoi_nhan: "",
-    loai_bban: "",
-    trang_thai: ""
+    don_vi_nhan: "",
   });
-
-  const [arrDanhMucC3, setArrDanhMucC3] = useState([]);
-  const [danhMucC3, setDanhMucC3] = useState(QLKC_C3_GIAONHAN_TEMCHI);
-  const [donViQuanLy, setDonViQuanLy] = useState(null);
+  const [arrC3GiaoNhanTemChi, setArrC3GiaoNhanTemChi] = useState([QLKC_C3_GIAONHAN_TEMCHI]);
+  const [GiaoNhanTemChi, setGiaoNhanTemChi] = useState(QLKC_C3_GIAONHAN_TEMCHI);
+  const [bienBan, setBienBan] = useState({});
   const [visible, setVisible] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
+  const [visibleViewer, setVisibleViewer] = useState(false);
   const toast = useRef(null);
-
-  const arrTrangThai = [
-    { label: "Có hiệu lực", value: 1 },
-    { label: "Hết hiệu lực", value: 0 },
-  ];
 
   useEffect(() => {
     const storedDsDonvi = sessionStorage.getItem("ds_donvi");
@@ -44,45 +38,32 @@ const GiaoNhanTemChi = () => {
   }, []);
 
   const loadData = async () => {
-    try 
-    {
-        const items = await getAll_QLKC_C3_GIAONHAN_TEMCHI();
-        setArrDanhMucC3(items);
-        console.log(items);
-        setPageCount(Math.ceil(items.totalRecord / pageSize));
-    } 
-
-    catch (err) 
-    {
-        console.log(err);
-        setArrDanhMucC3([]);
-        setPageCount(0);
-    }
-  };
-
-  const handleSearch = async () => {
-    try 
-    {
+    try {
       const data = {
-        page: page,
+        pageIndex: page,
         pageSize: pageSize,
-        don_vi_giao: options.don_vi_giao,
-        nguoi_nhan: options.nguoi_nhan,
-        loai_bban: options.loai_bban,
+        ...(options.don_vi_giao ? { don_vi_giao: options.don_vi_giao} : {}),
+        ...(options.don_vi_nhan ? { don_vi_nhan: options.don_vi_nhan } : {}),
+        ...(options.loai ? { loai: options.loai } : {}),
+        ...(options.trang_thai !== undefined
+          ? { trang_thai: options.trang_thai }: {}),
       };
 
-        const items = await search_QLKC_C3_GIAONHAN_TEMCHI(data);
-        console.log(items);
-        setArrDanhMucC3(items.data);
-        setPageCount(Math.ceil(items.totalRecord / pageSize));
-        console.log(data);
-    } 
+      console.log("Payload gửi lên API:", data);
 
-    catch (err) 
-    {
-        console.log(err);
-        setArrDanhMucC3([]);
-        setPageCount(0);
+      const items = await search_QLKC_C3_GIAONHAN_TEMCHI(data);
+      console.log("Phản hồi từ API:", items);
+
+      if (items && items.data) {
+        setArrC3GiaoNhanTemChi(items.data || []);
+      } else {
+        console.error("Không có dữ liệu trong phản hồi từ API");
+      }
+      setPageCount(Math.ceil((items?.totalItems || 0) / pageSize));
+    } catch (err) {
+      console.error("Lỗi tải dữ liệu:", err.message);
+      setArrC3GiaoNhanTemChi([]);
+      setPageCount(0);
     }
   };
 
@@ -90,70 +71,79 @@ const GiaoNhanTemChi = () => {
     loadData();
   }, [page, pageSize]);
 
+  console.log("GiaoNhanTemChi", GiaoNhanTemChi);
+
   const onClinkSearchBtn = (e) => {
-    handleSearch();
+    console.log("Nút Tìm kiếm được bấm");
+    loadData();
   };
+
+  console.log();
 
   return (
     <div className="grid">
       <div className="col-12">
         <div className="card">
-          <Panel header="Tìm kiếm" className="mb-4">
+          <Panel header="Giao nhận Tem Chì (C3)" className="mb-4">
             <Divider style={{ marginTop: "0", marginBottom: "10px" }} />
 
             <div className="flex flex-column lg:flex-row gap-3">
+              {/* Đơn vị giao */}
               <div className="flex-auto">
-                <label htmlFor="NGUOI_NHAN" className="mb-2 block">
-                  Người nhận
-                </label>
-                <InputText
-                  id="NGUOI_NHAN"
+                <label htmlFor="don_vi_giao" className="mb-2 block"> Đơn vị giao </label>
+                <Dropdown
+                  id="don_vi_giao"
                   className="w-full"
-                  placeholder="Nhập người nhận"
-                  onChange={(e) => {
-                    setOptions({ ...options, nguoi_nhan: e.target.value });
-                  }}
-                  type="text"
-                  value={options.nguoi_nhan}
-                />
-              </div>
-
-              <div className="flex-auto">
-                <label htmlFor="DON_VI_GIAO" className="mb-2 block">
-                  Đơn vị giao
-                </label>
-                <InputText
-                  id="DON_VI_GIAO"
-                  className="w-full"
-                  placeholder="Nhập đơn vị giao"
-                  onChange={(e) => {
-                    setOptions({ ...options, don_vi_giao: e.target.value });
-                  }}
-                  type="text"
+                  placeholder="Chọn đơn vị giao"
                   value={options.don_vi_giao}
+                  options={dsDonvi.map((dv) => ({
+                    label: dv.ten,
+                    value: dv.ma_dviqly,
+                  }))}
+                  onChange={(e) =>
+                    setOptions({ ...options, don_vi_giao: e.value })
+                  }
+                  showClear
                 />
               </div>
 
+              {/* Đơn vị nhận */}
               <div className="flex-auto">
-                <label htmlFor="LOAI_BBAN" className="mb-2 block">
-                  Loại biên bản
-                </label>
-                <InputText
-                  id="LOAI_BBAN"
+                <label htmlFor="don_vi_nhan" className="mb-2 block"> Đơn vị nhận </label>
+                <Dropdown
+                  id="don_vi_nhan"
                   className="w-full"
-                  placeholder="Nhập loại biên bản"
-                  onChange={(e) => {
-                    setOptions({ ...options, loai_bban: e.target.value });
-                  }}
-                  type="text"
-                  value={options.loai_bban}
+                  placeholder="Chọn đơn vị nhận"
+                  value={options.don_vi_nhan}
+                  options={dsDonvi.map((dv) => ({
+                    label: dv.ten,
+                    value: dv.ma_dviqly,
+                  }))}
+                  onChange={(e) =>
+                    setOptions({ ...options, don_vi_nhan: e.value })
+                  }
+                  showClear
                 />
               </div>
 
+              {/* Loại */}
               <div className="flex-auto">
-                <label htmlFor="trang_thai" className="mb-2 block">
-                  Trạng thái
-                </label>
+                <label htmlFor="loai" className="mb-2 block"> Loại </label>
+                <InputText
+                  id="loai"
+                  className="w-full"
+                  placeholder="Nhập loại"
+                  onChange={(e) =>
+                    setOptions({ ...options, loai: e.target.value })
+                  }
+                  value={options.loai}
+                />
+              </div>
+
+              {/* Trạng thái */}
+              <div className="flex-auto">
+                <label htmlFor="trang_thai" className="mb-2 block"> Trạng thái </label>
+                
                 <Dropdown
                   id="trang_thai"
                   className="w-full"
@@ -166,28 +156,29 @@ const GiaoNhanTemChi = () => {
                     { label: "Ký cấp 2", value: 2 },
                     { label: "Hủy", value: 3 },
                   ]}
-                  onChange={(e) => setOptions({ ...options, trang_thai: e.value })}
+                  onChange={(e) =>
+                    setOptions({ ...options, trang_thai: e.value })
+                  }
                   showClear
                 />
               </div>
             </div>
 
-              <div className="flex justify-content-center mt-4">
-                <Button
-                  style={{backgroundColor: '#1445a7', color: '#fff'}}
-                  label="Tìm kiếm"
-                  onClick={onClinkSearchBtn}
-                  severity="info"
-                />
-              </div>
+            <div className="flex justify-content-center mt-4">
+              <Button
+                style={{ backgroundColor: "#1445a7", color: "#fff" }}
+                label="Tìm kiếm"
+                onClick={onClinkSearchBtn}
+                severity="info"
+              />
+            </div>
           </Panel>
 
           <TableDM_C3
-            donvi={donViQuanLy}
             setVisible={setVisible}
             setIsUpdate={setIsUpdate}
-            setDanhMucC3={setDanhMucC3}
-            data={arrDanhMucC3}
+            setGiaoNhanTemChi={setGiaoNhanTemChi}
+            data={arrC3GiaoNhanTemChi}
             pageCount={pageCount}
             setPage={setPage}
             setPageSize={setPageSize}
@@ -199,13 +190,21 @@ const GiaoNhanTemChi = () => {
 
           {visible && (
             <InputDM_C3Modal
-                danhmucc3={danhMucC3}
-                isUpdate={isUpdate}
-                visible={visible}
-                setVisible={setVisible}
-                toast={toast}
-               loadData={loadData}
+              giaoNhanTemChi={GiaoNhanTemChi}
+              isUpdate={isUpdate}
+              visible={visible}
+              setVisible={setVisible}
+              toast={toast}
+              loadData={loadData}
             />
+          )}
+
+          {visibleViewer && (
+          <BienBanViewer
+            bienBan={bienBan}
+            visible={visibleViewer}
+            handleCloseModalViewer={handleCloseModalViewer}
+          />
           )}
         </div>
       </div>
@@ -213,4 +212,4 @@ const GiaoNhanTemChi = () => {
   );
 };
 
-export default GiaoNhanTemChi;
+export default GiaoNhanTemChiC3;
