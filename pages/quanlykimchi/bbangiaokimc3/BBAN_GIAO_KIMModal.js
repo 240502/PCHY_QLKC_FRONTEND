@@ -284,7 +284,10 @@ const BBAN_GIAO_KIMModal = ({
     >
       <div className="flex flex-column gap-4">
         <div>
-          <label className="block mb-2">Loại biên bản</label>
+          <label className="block mb-2">
+            {" "}
+            <span style={{ color: "red" }}>( * )</span> Loại biên bản
+          </label>
           <Dropdown
             value={bienBan?.loai_bban}
             className="w-full"
@@ -300,7 +303,7 @@ const BBAN_GIAO_KIMModal = ({
         <div className="flex flex-row justify-content-between">
           <div className="w-5">
             <label htmlFor="SAP_XEP" className="mb-5">
-              Chọn đơn vị giao
+              <span style={{ color: "red" }}>( * )</span> Chọn đơn vị giao
             </label>
             <Dropdown
               className="mt-2 w-full"
@@ -328,7 +331,7 @@ const BBAN_GIAO_KIMModal = ({
           </div>
           <div className="w-5">
             <label htmlFor="SAP_XEP" className="mb-2">
-              Chọn đơn vị nhận
+              <span style={{ color: "red" }}>( * )</span> Chọn đơn vị nhận
             </label>
             <Dropdown
               className="mt-2 w-full"
@@ -360,7 +363,7 @@ const BBAN_GIAO_KIMModal = ({
         <div className="flex flex-row justify-content-between">
           <div className="w-full">
             <label htmlFor="ma_kim" className="block">
-              Mã kìm
+              <span style={{ color: "red" }}>( * )</span> Mã kìm
             </label>
             <MultiSelect
               className=" w-full mt-2"
