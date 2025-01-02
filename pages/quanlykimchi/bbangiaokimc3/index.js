@@ -11,6 +11,7 @@ import { get_All_DM_DONVI } from "../../../services/quantrihethong/DM_DONVIServi
 import BienBanViewer from "./BienBanViewer";
 import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOIDUNGService";
 import { getDM_PHONGBANByMA_DVIQLY } from "../../../services/quantrihethong/DM_PHONGBANService";
+import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
 const arrTrangThai = [
   { label: "Soạn thảo", value: 0 },
   { label: "Ký cấp 1", value: 1 },
@@ -165,7 +166,16 @@ export const BBanGiaoKimC3 = () => {
   useEffect(() => {
     loadDataTable();
   }, [pageIndex, pageSize, options.loaiBienBan]);
-
+  const [kimArr, setKimArr] = useState([]);
+  const getD_KimInTable = async () => {
+    try {
+      const res = await D_KIMService.getD_KimInTable();
+      setKimArr(res);
+      console.log("res kim", res);
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
   return (
     <div className="grid">
       <Toast ref={toast} />
@@ -264,6 +274,8 @@ export const BBanGiaoKimC3 = () => {
             handleOnClickKySoBtn={handleOnClickKySoBtn}
             setOptions={setOptions}
             options={options}
+            getD_KimInTable={getD_KimInTable}
+            kimArr={kimArr}
           />
         </div>
         {visible && (
@@ -276,6 +288,7 @@ export const BBanGiaoKimC3 = () => {
             bienBan={bienBan}
             setBienBan={setBienBan}
             showToast={showToast}
+            getD_KimInTable={getD_KimInTable}
           />
         )}
         {visibleViewer && (

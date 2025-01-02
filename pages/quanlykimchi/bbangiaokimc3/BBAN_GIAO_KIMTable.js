@@ -41,6 +41,8 @@ const BBAN_GIAO_KIMTable = ({
   handleOnClickKySoBtn,
   setOptions,
   options,
+  getD_KimInTable,
+  kimArr,
 }) => {
   const [selectedRecords, setSelectedRecords] = useState([]);
   const [isMultiDelete, setIsMultiDelete] = useState(false);
@@ -100,14 +102,15 @@ const BBAN_GIAO_KIMTable = ({
         const res = await delete_QLKC_BBAN_BANGIAO_KIM(bienBan?.id_bienban);
         const kimId =
           bienBan.id_kim.length === 1
-            ? [Number(bienBan.id_kim)]
+            ? Number(bienBan.id_kim)
             : bienBan.id_kim.split(",").map((item) => Number(item));
+        const dataUpdate = {
+          ht_nguoidung_id: user.id,
+          ma_dvigiao: "PA23",
+          id_kim: null,
+        };
         if (kimId.length > 1) {
-          const dataUpdate = {
-            ht_nguoidung_id: user.id,
-            ma_dvigiao: "PA23",
-            id_kim: null,
-          };
+          console.log(kimId);
           kimId.forEach((id) => {
             update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: id });
           });
@@ -278,28 +281,35 @@ const BBAN_GIAO_KIMTable = ({
       </>
     );
   };
+
+  const bodyIdKimColumn = (rowData) => {
+    if (rowData.id_kim.length > 2) {
+      const maHieuList = [];
+
+      rowData.id_kim.split(",").forEach((item) => {
+        const kimOb = kimArr.find((kim) => kim.id_kim === Number(item));
+        if (kimOb) {
+          maHieuList.push(kimOb.ma_hieu);
+        }
+      });
+      return <span>{maHieuList.join(", ")}</span>;
+    } else {
+      const kimOb = kimArr.find((kim) => kim.id_kim === Number(rowData.id_kim));
+      if (kimOb) {
+        return <span>{kimOb.ma_hieu}</span>;
+      }
+    }
+  };
   useEffect(() => {
     handleFilterData(searchTerm);
   }, [searchTerm, data]);
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user") || "{}");
     setUser(user);
+    getD_KimInTable();
+    console.log("kimArr", kimArr);
   }, []);
-  const [kimArr, setKimArr] = useState([]);
 
-  const getKimById = async (id_kim) => {
-    console.log(id_kim);
-    if (id_kim.length > 0) {
-      const idKimArr = id_kim.split(",").map((item) => Number(item));
-      const fetchData = async () => {
-        const results = await Promise.all(
-          idKimArr.map((item) => get_D_KIM_ById(item))
-        );
-        setKimArr(results);
-      };
-      fetchData();
-    }
-  };
   return (
     <>
       <Panel headerTemplate={headerTemplate}>
@@ -382,7 +392,7 @@ const BBAN_GIAO_KIMTable = ({
                     <p>{rowData.ten_nguoi_giao}</p>
                     <p>
                       Đã ký {new Date(rowData.ngay_giao).getDate()}-
-                      {new Date(rowData.ngay_giao).getMonth()}-
+                      {new Date(rowData.ngay_giao).getMonth() + 1}-
                       {new Date(rowData.ngay_giao).getFullYear()}{" "}
                       {new Date(rowData.ngay_giao).getHours()}:
                       {new Date(rowData.ngay_giao).getMinutes()}:
@@ -413,7 +423,7 @@ const BBAN_GIAO_KIMTable = ({
                     <p>{rowData.ten_nguoi_nhan}</p>
                     <p>
                       Đã ký {new Date(rowData.ngay_nhan).getDate()}-
-                      {new Date(rowData.ngay_nhan).getMonth()}-
+                      {new Date(rowData.ngay_nhan).getMonth() + 1}-
                       {new Date(rowData.ngay_nhan).getFullYear()}{" "}
                       {new Date(rowData.ngay_nhan).getHours()}:
                       {new Date(rowData.ngay_nhan).getMinutes()}:
@@ -436,9 +446,7 @@ const BBAN_GIAO_KIMTable = ({
             field="id_kim"
             header="Mã kìm"
             className="min-w-10rem"
-            body={(rowData) => {
-              return rowData.id_kim;
-            }}
+            body={bodyIdKimColumn}
           ></Column>
           <Column
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}

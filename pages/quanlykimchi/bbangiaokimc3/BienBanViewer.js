@@ -212,6 +212,7 @@ const BienBanViewer = ({
                 options={users}
                 placeholder="Chọn"
                 filter
+                required
                 disabled={
                   bienBan?.trang_thai !== 0 || current_MADVIQLY !== "PA23"
                     ? true
@@ -279,10 +280,14 @@ const BienBanViewer = ({
             className="me-3"
             style={{ marginRight: "10px" }}
             onClick={() => {
-              if (bienBan.trang_thai === 0 && current_MADVIQLY == "PA23") {
-                signC1(bienBan.id_bienban);
+              if (bienBan.nguoi_nhan) {
+                if (bienBan.trang_thai === 0 && current_MADVIQLY == "PA23") {
+                  signC1(bienBan.id_bienban);
+                } else {
+                  signC2(bienBan.id_bienban);
+                }
               } else {
-                signC2(bienBan.id_bienban);
+                showToast("error", "Vui lòng chọn người nhận!");
               }
             }}
           />

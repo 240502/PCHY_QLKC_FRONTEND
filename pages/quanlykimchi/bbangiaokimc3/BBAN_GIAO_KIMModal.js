@@ -24,6 +24,7 @@ const BBAN_GIAO_KIMModal = ({
   bienBan,
   setBienBan,
   showToast,
+  getD_KimInTable,
 }) => {
   const [errors, setErrors] = useState({});
   const [D_KIM, setD_KIM] = useState([]);
@@ -161,8 +162,11 @@ const BBAN_GIAO_KIMModal = ({
         ma_dvigiao: data.don_vi_nhan,
         id_kim: null,
       };
-      selectedItems.forEach((item) => {
-        update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: item });
+      selectedItems.forEach(async (item, index) => {
+        await update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: item });
+        if (index + 1 === selectedItems.length) {
+          getD_KimInTable();
+        }
       });
       loadData();
     } catch (err) {
@@ -186,6 +190,7 @@ const BBAN_GIAO_KIMModal = ({
       showToast("success", "Sửa thành công!");
       handleCloseModal();
       loadData();
+      getD_KimInTable();
 
       if (deletedKimIds.length > 0) {
         const dataUpdate = {
@@ -363,7 +368,7 @@ const BBAN_GIAO_KIMModal = ({
         <div className="flex flex-row justify-content-between">
           <div className="w-full">
             <label htmlFor="ma_kim" className="block">
-              <span style={{ color: "red" }}>( * )</span> Mã kìm
+              <span style={{ color: "red" }}>( * )</span> Chọn kìm
             </label>
             <MultiSelect
               className=" w-full mt-2"
@@ -373,7 +378,7 @@ const BBAN_GIAO_KIMModal = ({
                 handleChangeSelectKim(e.value);
                 setSelectedItems(e.value);
               }}
-              placeholder="Chọn mã kìm"
+              placeholder="Chọn kìm"
               display="chip"
               optionValue="id_kim"
               optionLabel="ma_hieu"

@@ -3,9 +3,17 @@ import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { QLKC_C4_GIAONHAN_KIM } from "../../../models/QLKC_C4_GIAONHAN_KIM";
-import { create_PM_QLKC_C4_GIAONHAN_KIM, update_CD_QLKC_C4_GIAONHAN_KIM } from "../../../services/quanlykimchi/QLKC_C4_GIAONHAN_KIMService";
+import {
+  create_PM_QLKC_C4_GIAONHAN_KIM,
+  update_CD_QLKC_C4_GIAONHAN_KIM,
+  update_KIM_TRANGTHAI,
+} from "../../../services/quanlykimchi/QLKC_C4_GIAONHAN_KIMService";
 import { Dropdown } from "primereact/dropdown";
 import { Calendar } from "primereact/calendar";
+import { MultiSelect } from "primereact/multiselect";
+import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
+import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOIDUNGService";
+import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
 
 export const InputQLKC_KHO_CHI_TEMModal = ({
   isUpdate,
@@ -14,12 +22,41 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
   setVisible,
   toast,
   loadData,
+  fetchD_KIMData,
 }) => {
   const [GIAONHANKIM, setC4GIAONHANKIM] = useState({ ...QLKC_C4_GIAONHAN_KIM });
   const [errors, setErrors] = useState({});
   const [dsDonvi, setDsDonvi] = useState([]);
+  const [D_KIM, setD_KIM] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [dsNguoiNhan, setDsNguoiNhan] = useState([]);
+  const [users, setUsers] = useState([HT_NGUOIDUNG]);
+  const [currentUserName, setCurrentUserName] = useState("");
+  const [usedKimIds, setUsedKimIds] = useState([]);
+  const [deleteKimID, setdeleteKimID] = useState([]);
+  const [newKimID, setnewKimID] = useState([]);
+  const currentUser = JSON.parse(sessionStorage.getItem("user") || "{}");
+  const [iD_KIM, setID_KIM] = useState(null);
 
-  // Hàm lấy dữ liệu đơn vị từ sessionStorage
+  useEffect(() => {
+    if (currentUser && currentUser.id) {
+      console.log("Current User ID:", currentUser.id);
+      setC4GIAONHANKIM((prev) => ({
+        ...prev,
+        nguoI_GIAO: currentUser.id,
+      }));
+      setCurrentUserName(currentUser.ho_ten || "");
+    } else {
+      console.error("User data is not available or invalid:", currentUser);
+    }
+  }, [isUpdate]);
+
+  useEffect(() => {
+    if (isUpdate && giaoNhanKim) {
+      setID_KIM(giaoNhanKim.iD_KIM);
+    }
+  }, [isUpdate, giaoNhanKim]);
+
   const getDSDVIQLY = () => {
     const storedDonvi = sessionStorage.getItem("ds_donvi");
     if (storedDonvi) {
@@ -27,16 +64,19 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
     }
   };
 
-  // Hàm cập nhật dữ liệu khi modal mở
   const getDSDVIQLY1 = () => {
     try {
-      if (isUpdate && giaoNhanKim) {
+      if (isUpdate && giaoNhanKim?.iD_KIM) {
         setC4GIAONHANKIM(giaoNhanKim);
+        setSelectedItems(
+          giaoNhanKim.iD_KIM.split(",").map((item) => parseInt(item))
+        );
       } else {
         setC4GIAONHANKIM({ ...QLKC_C4_GIAONHAN_KIM });
+        setSelectedItems([]);
       }
     } catch (err) {
-      console.log(err);
+      console.log("Error in getDSDVIQLY1:", err);
     }
   };
 
@@ -45,26 +85,97 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
     getDSDVIQLY1();
   }, [isUpdate, giaoNhanKim]);
 
-  // Hàm cập nhật dữ liệu trong state
   const handleInputChange = (field, value) => {
     setC4GIAONHANKIM({
       ...GIAONHANKIM,
-      [field]: value || "",  // Default to empty string if no value is provided
+      [field]: value || "",
     });
   };
-  
 
-  // Hàm xử lý dữ liệu khi submit
+  useEffect(() => {
+    const getAllD_KIM = async () => {
+      try {
+        const ma_dviqly = JSON.parse(
+          sessionStorage.getItem("current_MADVIQLY") || ""
+        );
+        let requestData = {};
+        if (!isUpdate) {
+          requestData = {
+            ma_dviqly: ma_dviqly,
+            iD_KIM: "", // Trạng thái cần truyền
+          };
+        } else {
+          requestData = {
+            ma_dviqly: ma_dviqly,
+            iD_KIM: giaoNhanKim.iD_KIM,
+          };
+        }
+
+        // Gọi API với dữ liệu dạng JSON
+        const res = await D_KIMService.get_ALL_D_KIMTTByMA_DVIQLY(requestData); // Gọi API với đối tượng requestData
+        setD_KIM(res);
+
+        console.log("1", res);
+
+        // Kiểm tra xem có dữ liệu trả về không
+        if (res) {
+          // setUsedKimIds(usedKimResponse);
+        } else {
+          console.warn("Không có dữ liệu kìm nào được trả về.");
+        }
+      } catch (err) {
+        console.error("Lỗi khi gọi API:", err.message); // In ra lỗi chi tiết
+      }
+    };
+    getAllD_KIM();
+  }, [isUpdate, iD_KIM]);
+
+  useEffect(() => {
+    const oldIdKim = giaoNhanKim?.iD_KIM
+      ? giaoNhanKim.iD_KIM.split(",").map((item) => parseInt(item))
+      : [];
+
+    const updatedDeleteKimID = [];
+    const updatedNewKimID = [];
+
+    oldIdKim.forEach((item) => {
+      if (!selectedItems.includes(item)) {
+        console.log("Item bị bỏ chọn:", item);
+        updatedDeleteKimID.push(item);
+      }
+    });
+
+    selectedItems.forEach((item) => {
+      if (!oldIdKim.includes(item)) {
+        console.log("Item mới chọn:", item);
+        updatedNewKimID.push(item);
+      }
+    });
+
+    setdeleteKimID(updatedDeleteKimID);
+    console.log("ok", giaoNhanKim);
+    setnewKimID(updatedNewKimID);
+  }, [selectedItems, giaoNhanKim]);
+
+  console.log("Used Kim IDs:", usedKimIds);
+  // console.log("Filtered Kim Options:", filteredKimOptions);
+
   const handleCreate = async () => {
-    const dataToSend = Object.fromEntries(
-      Object.entries(GIAONHANKIM).map(([key, value]) => [
-        key,
-        value === null || value === undefined ? "" : value,  // Ensure all values are non-null strings
-      ])
-    );
-  
+    const ma_dviqly_raw = sessionStorage.getItem("current_MADVIQLY") || "";
+    const ma_dviqly = ma_dviqly_raw.replace(/^"(.*)"$/, "$1"); // Loại bỏ dấu ngoặc kép nếu có
+
+    const dataToSend = {
+      ...GIAONHANKIM,
+      nguoI_GIAO: currentUser?.id || "",
+      iD_KIM: selectedItems.join(","),
+      madonviqly: ma_dviqly, // Thêm trường madonviqly đã được xử lý
+    };
+    console.log("Dữ liệu gửi đi:", dataToSend);
+
     try {
       await create_PM_QLKC_C4_GIAONHAN_KIM(dataToSend);
+      await Promise.all(selectedItems.map((id) => update_KIM_TRANGTHAI(id, 1))); // Cập nhật trạng thái lên 1
+      setUsedKimIds((prev) => [...prev, ...selectedItems]);
       toast.current.show({
         severity: "success",
         summary: "Thông báo",
@@ -73,6 +184,7 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
       });
       setVisible(false);
       loadData();
+      fetchD_KIMData();
     } catch (err) {
       toast.current.show({
         severity: "error",
@@ -82,7 +194,7 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
       });
     }
   };
-  
+
   const handleSubmit = () => {
     if (isUpdate) {
       handleUpdate();
@@ -92,215 +204,188 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
   };
 
   const handleUpdate = async () => {
+    // Cập nhật số lượng giao trước khi gửi
+    handleInputChange("sO_LUONG_GIAO", selectedItems.length.toString());
+
+    const updatedData = {
+      ...GIAONHANKIM,
+      iD_KIM: selectedItems.join(","), // Cập nhật iD_KIM với các giá trị đã chọn
+    };
+
+    console.log("Dữ liệu trước khi cập nhật:", updatedData);
+
     try {
-      await update_CD_QLKC_C4_GIAONHAN_KIM(GIAONHANKIM);
+      // Gửi dữ liệu cập nhật
+      await update_CD_QLKC_C4_GIAONHAN_KIM(updatedData);
+
+      // Cập nhật trạng thái kìm mới
+      if (newKimID.length > 0) {
+        console.log("Updating trạng thái kìm mới:", newKimID);
+        await Promise.all(
+          newKimID.map((iD_KIM) => update_KIM_TRANGTHAI(iD_KIM, 1))
+        );
+      }
+
+      // Cập nhật trạng thái kìm bị bỏ
+      if (deleteKimID.length > 0) {
+        console.log("Updating trạng thái kìm bị bỏ:", deleteKimID);
+        await Promise.all(
+          deleteKimID.map((iD_KIM) => update_KIM_TRANGTHAI(iD_KIM, 0))
+        );
+      }
+
       toast.current.show({
         severity: "success",
         summary: "Thông báo",
         detail: "Cập nhật dữ liệu thành công",
         life: 3000,
       });
+
       setVisible(false);
       loadData();
     } catch (err) {
+      console.error("Lỗi khi cập nhật dữ liệu:", err);
+
       toast.current.show({
         severity: "error",
-summary: "Thông báo",
+        summary: "Thông báo",
         detail: "Lỗi khi cập nhật dữ liệu",
         life: 3000,
       });
     }
   };
 
+  useEffect(() => {
+    const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
+      try {
+        const ma_dviqly = JSON.parse(
+          sessionStorage.getItem("current_MADVIQLY") || ""
+        );
+        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(
+          ma_dviqly
+        );
+        setUsers(res);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    getHT_NGUOIDUNGByMA_DVIQLY();
+
+    console.log("GIAONHANKIM", GIAONHANKIM);
+  }, []);
+
   return (
     <Dialog
-      header={isUpdate ? "Sửa thông tin giao nhận kìm c4" : "Thêm mới giao nhận kìm c4"}
+      header={
+        isUpdate
+          ? "Sửa thông tin giao nhận kìm c4"
+          : "Thêm mới giao nhận kìm c4"
+      }
       visible={visible}
       className="w-6 md:w-5/12 lg:w-4/12"
       onHide={() => {
         setVisible(false);
-        setC4GIAONHANKIM({}); // Reset dữ liệu khi đóng modal
+        setC4GIAONHANKIM({});
       }}
     >
       <div className="flex flex-column gap-4">
-        {/* Số lượng giao */}
-        <div className="flex flex-column">
-          <label htmlFor="sO_LUONG_GIAO" className="mb-2">Số lượng giao</label>
-          <InputText
-            id="sO_LUONG_GIAO"
-            className="w-full"
-            placeholder="Số lượng giao ..."
-            onChange={(e) => handleInputChange("sO_LUONG_GIAO", e.target.value)}
-            value={GIAONHANKIM.sO_LUONG_GIAO}
-          />  
+        <div className="flex flex-row gap-4">
+          <div className="flex flex-column flex-1">
+            <label htmlFor="sO_LUONG_GIAO" className="mb-2">
+              Số lượng giao
+            </label>
+            <InputText
+              id="sO_LUONG_GIAO"
+              className="w-full"
+              placeholder="Số lượng giao ..."
+              value={GIAONHANKIM.sO_LUONG_GIAO}
+              disabled
+            />
+          </div>
+          <div className="flex flex-column flex-1">
+            <label htmlFor="ma_kim" className="block">
+              <span style={{ color: "red" }}>( * )</span>Mã kìm
+            </label>
+            <MultiSelect
+              className="w-full mt-2"
+              value={selectedItems}
+              options={D_KIM}
+              onChange={(e) => {
+                console.log("test1", e.value);
+                setSelectedItems(e.value);
+                handleInputChange("sO_LUONG_GIAO", e.value.length.toString());
+              }}
+              placeholder="Chọn mã kìm"
+              display="chip"
+              optionValue="id_kim"
+              optionLabel="ma_hieu"
+              onFocus={() => {
+                setErrors({ ...errors, maKim: null });
+              }}
+            />
+
+            {errors?.maKim && (
+              <small className="p-error">{errors?.maKim}</small>
+            )}
+          </div>
         </div>
 
-        {/* Số lượng trả */}
-        <div className="flex flex-column">
-          <label htmlFor="sO_LUONG_TRA" className="mb-2">Số lượng trả</label>
-          <InputText
-            id="sO_LUONG_TRA"
-            className="w-full"
-            placeholder="Số lượng trả ..."
-            onChange={(e) => handleInputChange("sO_LUONG_TRA", e.target.value)}
-            value={GIAONHANKIM.sO_LUONG_TRA}
-          />
+        <div className="flex flex-row gap-4">
+          <div className="flex flex-column flex-1">
+            <label htmlFor="nguoI_GIAO" className="mb-2">
+              Người giao
+            </label>
+            <InputText
+              id="nguoI_GIAO"
+              className="w-full"
+              value={currentUserName}
+              disabled
+            />
+          </div>
+          <div className="flex flex-column flex-1">
+            <label htmlFor="nguoI_NHAN" className="mb-2">
+              <span style={{ color: "red" }}>( * )</span>
+              Người nhận
+            </label>
+            <Dropdown
+              value={GIAONHANKIM?.nguoI_NHAN}
+              className="w-full"
+              options={users}
+              placeholder="Chọn"
+              showClear
+              filter
+              optionValue="id"
+              optionLabel="hO_TEN"
+              onChange={(e) => {
+                handleInputChange("nguoI_NHAN", e.value);
+              }}
+            />
+          </div>
+        </div>
+        <div className="flex flex-row gap-4">
+          <div className="flex flex-column flex-1">
+            <label htmlFor="noI_DUNG" className="mb-2">
+              Nội dung
+            </label>
+            <InputText
+              id="noI_DUNG"
+              className="w-full"
+              onChange={(e) => handleInputChange("noI_DUNG", e.target.value)}
+              value={GIAONHANKIM.noI_DUNG}
+            />
+          </div>
         </div>
 
-        {/* Số lượng thu hồi */}
-        <div className="flex flex-column">
-          <label htmlFor="sO_LUONG_THUHOI" className="mb-2">Số lượng thu hồi</label>
-          <InputText
-            id="sO_LUONG_THUHOI"
-            className="w-full"
-            placeholder="Số lượng thu hồi ..."
-            onChange={(e) => handleInputChange("sO_LUONG_THUHOI", e.target.value)}
-            value={GIAONHANKIM.sO_LUONG_THUHOI}
-          />
-        </div>
-
-        <div className="flex flex-column">
-          <label htmlFor="loai" className="mb-2">Loại</label>
-          <InputText
-            id="loai"
-            className="w-full"
-            placeholder="Số lượng thu hồi ..."
-            onChange={(e) => handleInputChange("loai", e.target.value)}
-            value={GIAONHANKIM.loai}
-          />
-        </div>
-
-        <div className="flex flex-column">
-          <label htmlFor="donvI_TINH" className="mb-2">Đơn vị tính</label>
-          <InputText
-            id="donvI_TINH"
-            className="w-full"
-            placeholder="Số lượng thu hồi ..."
-            onChange={(e) => handleInputChange("donvI_TINH", e.target.value)}
-            value={GIAONHANKIM.donvI_TINH}
-          />
-        </div>
-
-
-
-        {/* Đơn vị giao */}
-        <div className="flex flex-column">
-          <label htmlFor="doN_VI_GIAO" className="mb-2">Đơn vị giao</label>
-          <Dropdown
-            id="doN_VI_GIAO"
-            value={GIAONHANKIM.doN_VI_GIAO}
-            options={dsDonvi}
-            onChange={(e) => handleInputChange("doN_VI_GIAO", e.value)}
-optionLabel="ten"
-            optionValue="ma_dviqly"
-            placeholder="Chọn đơn vị giao"
-            className="w-full"
-          />
-        </div>
-
-        {/* Đơn vị nhận */}
-        <div className="flex flex-column">
-          <label htmlFor="doN_VI_NHAN" className="mb-2">Đơn vị nhận</label>
-          <Dropdown
-            id="doN_VI_NHAN"
-            value={GIAONHANKIM.doN_VI_NHAN}
-            options={dsDonvi}
-            onChange={(e) => handleInputChange("doN_VI_NHAN", e.value)}
-            optionLabel="ten"
-            optionValue="ma_dviqly"
-            placeholder="Chọn đơn vị nhận"
-            className="w-full"
-          />
-        </div>
-
-        {/* Các trường khác */}
-        <div className="flex flex-column">
-          <label htmlFor="nguoI_NHAN" className="mb-2">Người nhận</label>
-          <InputText
-            id="nguoI_NHAN"
-            className="w-full"
-            onChange={(e) => handleInputChange("nguoI_NHAN", e.target.value)}
-            value={GIAONHANKIM.nguoI_NHAN}
-          />
-        </div>
-
-        <div className="flex flex-column">
-          <label htmlFor="nguoI_GIAO" className="mb-2">Người giao</label>
-          <InputText
-            id="nguoI_GIAO"
-            className="w-full"
-            onChange={(e) => handleInputChange("nguoI_GIAO", e.target.value)}
-            value={GIAONHANKIM.nguoI_GIAO}
-          />
-        </div>
-
-        <div className="flex flex-column">
-  <label htmlFor="ngaY_GIAO" className="mb-2">Ngày giao</label>
-  <Calendar
-    id="ngaY_GIAO"
-    className="w-full"
-    value={GIAONHANKIM.ngaY_GIAO ? new Date(GIAONHANKIM.ngaY_GIAO) : null} // Chuyển giá trị về kiểu Date
-    onChange={(e) => handleInputChange("ngaY_GIAO", e.value?.toISOString().split("T")[0])} // Lấy giá trị dạng YYYY-MM-DD
-    dateFormat="yy-mm-dd"
-    showIcon
-    placeholder="Chọn ngày giao"
-  />
-</div>
-
-<div className="flex flex-column">
-  <label htmlFor="ngaY_NHAN" className="mb-2">Ngày nhận</label>
-  <Calendar
-    id="ngaY_NHAN"
-    className="w-full"
-    value={GIAONHANKIM.ngaY_NHAN ? new Date(GIAONHANKIM.ngaY_NHAN) : null} // Chuyển giá trị về kiểu Date
-    onChange={(e) => handleInputChange("ngaY_NHAN", e.value?.toISOString().split("T")[0])} // Lấy giá trị dạng YYYY-MM-DD
-    dateFormat="yy-mm-dd"
-    showIcon
-    placeholder="Chọn ngày nhận"
-  />
-</div>
-
-
-        
-        <div className="flex flex-column">
-          <label htmlFor="tranG_THAI" className="mb-2">Trạng thái</label>
-          <InputText
-            id="tranG_THAI"
-            className="w-full"
-            onChange={(e) => handleInputChange("tranG_THAI", e.target.value)}
-            value={GIAONHANKIM.tranG_THAI}
-          />
-        </div>
-
-        <div className="flex flex-column">
-          <label htmlFor="loaI_BBAN" className="mb-2">Loại biên bản</label>
-          <InputText
-            id="loaI_BBAN"
-            className="w-full"
-onChange={(e) => handleInputChange("loaI_BBAN", e.target.value)}
-            value={GIAONHANKIM.loaI_BBAN}
-          />
-        </div>
-
-        {/* Các trường "nội dung" khác */}
-        <div className="flex flex-column">
-          <label htmlFor="noI_DUNG" className="mb-2">Nội dung</label>
-          <InputText
-            id="noI_DUNG"
-            className="w-full"
-            onChange={(e) => handleInputChange("noI_DUNG", e.target.value)}
-            value={GIAONHANKIM.noI_DUNG}
-          />
-        </div>
-
-        {/* Nút hành động */}
         <div className="flex justify-content-center gap-4 mt-4">
-          <Button
-            label="Lưu"
-            onClick={handleSubmit}
-            severity="success"
-            style={{ backgroundColor: "#1445a7" }}
-          />
+          {selectedItems.length > 0 && (
+            <Button
+              label="Lưu"
+              onClick={handleSubmit}
+              severity="success"
+              style={{ backgroundColor: "#1445a7" }}
+            />
+          )}
           <Button
             label="Đóng"
             outlined

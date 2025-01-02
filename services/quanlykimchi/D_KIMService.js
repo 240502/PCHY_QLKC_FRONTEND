@@ -13,6 +13,25 @@ export const D_KIMService = {
     const res = await apiClient.post("/D_KIM/update_MA_DVIQLY", data);
     return res;
   },
+  async get_ALL_D_KIMTTByMA_DVIQLY1(ma_dviqly) {
+    const res = await apiClient.get(
+      "/D_KIM/get_ALL_D_KIMTTByMA_DVIQLY1?ma_dviqly=" + ma_dviqly
+    );
+    return res?.data;
+  },
+
+  async get_ALL_D_KIMTTByMA_DVIQLY(requestData) {
+    const res = await apiClient.post(
+      `D_KIM/get_ALL_D_KIMTTByMA_DVIQLY`,
+      requestData
+    );
+
+    return res?.data;
+  },
+  async getD_KimInTable() {
+    const res = await apiClient.get("/D_KIM/getD_KimInTable");
+    return res?.data;
+  },
 };
 export const insert_D_KIM = async (data) => {
   const res = await apiClient.post("/D_KIM/insert_D_KIM", data);
