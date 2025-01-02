@@ -28,6 +28,7 @@ export const TableDM_C3 = ({
     pageSize,
     loadData,
     toast,
+    handleOnClickKySoBtn,
 }) => {
   const rowsPerPageOptions = [5, 10, 25];
   const [isHide, setIsHide] = useState(false);
@@ -38,6 +39,10 @@ export const TableDM_C3 = ({
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const [actionType, setActionType] = useState("");
   const [selectedRecord, setSelectedRecord] = useState(null);
+
+  const current_MADVIQLY = JSON.parse(
+    sessionStorage.getItem("current_MADVIQLY")
+  );
 
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -254,20 +259,28 @@ export const TableDM_C3 = ({
             setIsConfirmVisible(true);}}/>
 
         <Button
-          icon="pi pi-pencil"
-          tooltip="Kí duyệt"
+          icon={`pi ${
+            (rowData.trang_thai === 0 && current_MADVIQLY === "PA23") ||
+            (current_MADVIQLY !== "PA23" && rowData.trang_thai === 1)
+              ? "pi-user-edit"
+              : "pi-eye"
+          } `}
+          tooltip={
+            (rowData.trang_thai === 0 && current_MADVIQLY === "PA23") ||
+            (current_MADVIQLY !== "PA23" && rowData.trang_thai === 1)
+              ? "Ký số"
+              : "Xem chi tiết"
+          }
           tooltipOptions={{ position: "top" }}
           style={{
             backgroundColor: "#485479",
-            color: "#fff",
             marginLeft: "10px",
-            border: "none",
           }}
-
           onClick={() => {
-            setActionType("Kí duyệt");
-            setSelectedRecord(rowData);
-            setIsConfirmVisible(true);}}/>
+            console.log("on click");
+            handleOnClickKySoBtn(rowData);
+          }}
+        ></Button>
       </div>
     );
   };

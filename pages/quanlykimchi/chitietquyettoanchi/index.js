@@ -10,10 +10,9 @@ import Link from "next/link";
 import { Paginator } from "primereact/paginator";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { Toast } from "primereact/toast";
-import { Divider } from "primereact/divider";
 import { Panel } from "primereact/panel";
 import { DataTable } from "primereact/datatable";
-import { DialogForm } from "./DialogForm";
+import { DialogForm } from "../giaonhantemchic4/DialogForm";
 import { DialogFormQuyetToan } from "./DialogFormQuyetToan";
 import { Column } from "primereact/column";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
@@ -33,20 +32,21 @@ import { useTableSort } from "../../../hooks/useTableSort";
 import { propSortAndFilter } from "../../../constants/propGlobal";
 import { get_All_DM_DONVI } from "../../../services/quantrihethong/DM_DONVIService";
 import { searchDM_PHONGBAN } from "../../../services/quantrihethong/DM_PHONGBANService";
-import { useRouter } from 'next/router';
-import BienBanViewer from "./BienBanViewer";
+import { search_QLKC_C4_CHITIET_QUYETTOANCHI } from "../../../services/quanlykimchi/QLKC_C4_CHITIET_QUYETTOANCHIService";
+import { useRouter } from "next/router";
 
-export const GIAONHAN_TEMCHI = () => {
-  const currentMenu = sessionStorage.getItem("currentMenu");
+const CHITIET_QUYETTOANCHI = () => {
   const router = useRouter();
+  const { id_giaonhan_temchi } = router.query;
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [pageCount, setPageCount] = useState(0);
-  const [arr_GIAONHAN_TEMCHI, setArr_GIAONHAN_TEMCHI] = useState([]);
+  const [arr_CHITIET_QUYETTOANCHI, setArr_CHITIET_QUYETTOANCHI] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [arr_GIAONHAN_TEMCHI_QLY, setArr_GIAONHAN_TEMCHI_QLY] = useState([]);
-  const [formData, setFormData] = useState(QLKC_C4_GIAONHAN_TEMCHI);
-  const [formDataQuyetToan, setFormDataQuyetToan] = useState(QLKC_C4_CHITIET_QUYETTOANCHI);
+  const [formDataQuyetToan, setFormDataQuyetToan] = useState(
+    QLKC_C4_CHITIET_QUYETTOANCHI
+  );
   const [formFilter, setFormFilter] = useState({ loai: "", doN_VI_TINH: "" });
   const [keyFilter, setKeyFilter] = useState();
   const [showDialog, setShowDialog] = useState(false);
@@ -60,129 +60,93 @@ export const GIAONHAN_TEMCHI = () => {
   const [visibleFormQuyetToan, setVisibleFormQuyetToan] = useState(false);
   const toast = useRef(null);
   const [DM_DONVI, setDM_DONVI] = useState([]);
-  const [arrDonVi, setArrDonVi] = useState([]);
   const [DM_PHONGBAN, setDM_PHONGBAN] = useState([]);
-  const [bienBan, setBienBan] = useState({});
-  const [bienBanArr, setBienBanArr] = useState([]);
-  const [visibleViewer, setVisibleViewer] = useState(false);
-  const [options, setOptions] = useState({
-    donViNhan: "",
-    donViGiao: "",
-    trangThai: "",
-    loaiBienBan: "",
+  const [optionsTrangThai, setOptionsTrangThai] = useState({
+    ma: undefined,
+    ten: "",
+    tranG_THAI: {
+      label: "",
+      value: "",
+    },
   });
-  // const [HT_NGUOIDUNG, setHT_NGUOIDUNG] = useState([]);
   const arrTrangThai = [
-    { label: "Biên bản mượn", value: 1 },
-    { label: "Biên bản trả", value: 2 },
-    { label: "Biên bản quyết toán", value: 3 },
+    { label: "Đang chờ duyệt", value: 0 },
+    { label: "C1 đã ký", value: 1 },
+    { label: "C2 đã ký", value: 2 },
+    { label: "Bị hủy", value: 3 },
   ];
-  const initSearch = {
-    hO_TEN: "",
-    teN_DANG_NHAP: "",
-    tranG_THAI: -1,
-    dM_DONVI_ID: null,
-    dM_PHONGBAN_ID: null,
-    dM_CHUCVU_ID: null,
-    pageIndex: 1,
-    pageSize: 10,
-  };
 
   const { sortField, sortOrder, handleSort } = useTableSort();
 
-  const loadGiaoNhanTemChi = useCallback(async () => {
+  useEffect(() => {
+    if (id_giaonhan_temchi) {
+      // Load dữ liệu quyết toán dựa trên id_giaonhan_temchi
+      loadChiTietQuyetToanChi();
+    }
+  }, [id_giaonhan_temchi]);
+
+  const loadChiTietQuyetToanChi = useCallback(async () => {
     try {
-      const data = {
+      const items = await search_QLKC_C4_CHITIET_QUYETTOANCHI({
         pageIndex: page,
         pageSize,
-        loai_bban: options.loaiBienBan ,
-        trang_thai: options.trangThai,
-        don_vi_giao: options.donViGiao,
-        don_vi_nhan: options.donViNhan,
-       
-      };
-      const items = await search_QLKC_C4_GIAONHAN_TEMCHI(data);
-      setArr_GIAONHAN_TEMCHI(items.data);
-      setTotalRecords(items.totalItems);
-      let newBienBanArr = [];
-      items?.data.forEach(async (bb, index) => {
-        let nguoiNhan = {};
-        let nguoiGiao = {};
-        if (bb?.nguoi_nhan) {
-          try {
-            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoi_nhan);
-            nguoiNhan = res;
-          } catch (err) {
-            console.log(err);
-          }
-        }
-        if (bb?.nguoi_giao) {
-          try {
-            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoi_giao);
-            nguoiGiao = res;
-          } catch (err) {
-            console.log(err);
-          }
-        }
-
-        newBienBanArr.push({
-          ...bb,
-          ten_nguoi_giao: nguoiGiao.ho_ten,
-          ten_nguoi_nhan: nguoiNhan.ho_ten,
-        });
-        setBienBanArr(newBienBanArr);
-        // console.log("bien ban bel",bienBanArr)
+        // id_giaonhan_temchi, // Thêm id vào params
+        ...keyFilter,
       });
-
+      setArr_CHITIET_QUYETTOANCHI(items.data);
+      setTotalRecords(items.totalItems);
       setPageCount(Math.ceil(items.totalItems / pageSize));
     } catch (err) {
-      console.log(err.message);
-      setBienBanArr([]);
+      console.error("Không thể tải dữ liệu:", err);
+      toast.current.show({
+        severity: "error",
+        summary: "Lỗi",
+        detail: "Không thể tải dữ liệu",
+        life: 3000,
+      });
     }
-  });
+  }, [page, pageSize, keyFilter, id_giaonhan_temchi]);
 
   useEffect(() => {
-    loadGiaoNhanTemChi();
-  }, [page, pageSize, keyFilter, loadGiaoNhanTemChi]);
+    loadChiTietQuyetToanChi();
+  }, [page, pageSize, keyFilter, loadChiTietQuyetToanChi]);
 
   useEffect(() => {
     if (searchTerm === "") {
-      setFilteredData(arr_GIAONHAN_TEMCHI);
+      setFilteredData(arr_CHITIET_QUYETTOANCHI);
     } else {
-      const filtered = arr_GIAONHAN_TEMCHI.filter(
+      const filtered = arr_CHITIET_QUYETTOANCHI.filter(
         (item) =>
           item.loai.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.doN_VI_TINH.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredData(filtered);
     }
-  }, [searchTerm, arr_GIAONHAN_TEMCHI]);
+  }, [searchTerm, arr_CHITIET_QUYETTOANCHI]);
   useEffect(() => {
-    // loadHT_NGUOIDUNG({...searchTerm, pageIndex: page, pageSize})
-    loadDM_DONVI()
-    loadDM_PHONGBAN()
-}, [])
-// const loadHT_NGUOIDUNG = async (searchTerm) => {
-//   let res = await HT_NGUOIDUNG_Service.search(searchTerm);
-//   console.log(res.data)
-//   if (res) {
-//       setHT_NGUOIDUNG([{ id: "", name: '-- Tất cả --' }, ...res.data.map(item => ({
-//         id: item.id,
-//         name: item.ho_ten,
-//         dm_donvi_id: item.dm_donvi_id
-//       }))]);  // Dữ liệu của người dùng từ API
-//   }
-// };
-const loadDM_DONVI = async () => {
-  let res = await get_All_DM_DONVI()
-  console.log(res)
-  if (res) {
-      setDM_DONVI([{ id: "", name: '-- Tất cả --' }, ...res.map(item => ({
-          id: item.ma_dviqly,
+    const loadInitialData = async () => {
+      await Promise.all([
+        // loadHT_NGUOIDUNG(),
+        loadDM_DONVI(),
+        loadDM_PHONGBAN(),
+      ]);
+    };
+
+    loadInitialData();
+  }, []);
+
+  const loadDM_DONVI = async () => {
+    let res = await get_All_DM_DONVI();
+    console.log(res);
+    if (res) {
+      setDM_DONVI([
+        { id: "", name: "-- Tất cả --" },
+        ...res.map((item) => ({
+          id: item.dm_donvi_id,
           name: item.ten,
+          dm_donvi_id: item.dm_donvi_id,
         })),
       ]);
-      setArrDonVi(res)
     }
   };
 
@@ -204,114 +168,11 @@ const loadDM_DONVI = async () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleChange = (field, value) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [field]: !value ? "Trường này là bắt buộc" : "",
-    }));
-  };
-
   const handleChangeFilter = (field, value) => {
     setFormFilter((prevData) => ({
       ...prevData,
       [field]: value,
     }));
-  };
-
-  const handleKyC1 = async (GIAONHAN_TEMCHI) => {
-    try {
-      if (!GIAONHAN_TEMCHI.id) {
-        throw new Error("ID không hợp lệ");
-      }
-
-      const response = await update_kyC1_QLKC_C4_GIAONHAN_TEMCHI(
-        GIAONHAN_TEMCHI.id
-      );
-
-      if (response && response.status === 200) {
-      toast.current.show({
-        severity: "success",
-        summary: "Thành công",
-          detail: "Biên bản đã được ký cấp 1",
-          life: 3000,
-        });
-        await loadGiaoNhanTemChi();
-      } else {
-        throw new Error("Không nhận được phản hồi hợp lệ từ API.");
-      }
-    } catch (err) {
-      console.error("Lỗi khi ký cấp 1:", err.message);
-      toast.current.show({
-        severity: "error", 
-        summary: "Lỗi",
-        detail: "Không thể ký cấp 1. Vui lòng thử lại.",
-        life: 3000,
-      });
-    }
-  };
-
-  const handleKyC2 = async (GIAONHAN_TEMCHI) => {
-    try {
-      if (!GIAONHAN_TEMCHI.id) {
-        throw new Error("ID không hợp lệ");
-      }
-
-      const response = await update_kyC2_QLKC_C4_GIAONHAN_TEMCHI(
-        GIAONHAN_TEMCHI.id
-      );
-
-      if (response) {
-      toast.current.show({
-        severity: "success",
-        summary: "Thành công",
-          detail: "Biên bản đã được ký cấp 2",
-          life: 3000,
-        });
-        await loadGiaoNhanTemChi();
-      }
-    } catch (err) {
-      console.error("Lỗi khi ký cấp 2:", err);
-      toast.current.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: "Không thể ký cấp 2. Vui lòng thử lại",
-        life: 3000,
-      });
-    }
-  };
-
-  const handleHuyKy = async (GIAONHAN_TEMCHI) => {
-    try {
-      if (!GIAONHAN_TEMCHI.id) {
-        throw new Error("ID không hợp lệ");
-      }
-
-      const response = await update_huyPM_QLKC_C4_GIAONHAN_TEMCHI(
-        GIAONHAN_TEMCHI.id
-      );
-
-      if (response) {
-      toast.current.show({
-        severity: "success",
-        summary: "Thành công",
-          detail: "Biên bản đã được hủy",
-          life: 3000,
-        });
-        await loadGiaoNhanTemChi();
-      }
-    } catch (err) {
-      console.error("Lỗi khi hủy ký:", err);
-      toast.current.show({
-        severity: "error",
-        summary: "Lỗi", 
-        detail: "Không thể hủy ký. Vui lòng thử lại",
-        life: 3000,
-      });
-    }
   };
 
   const onPageChange = (event) => {
@@ -359,7 +220,7 @@ const loadDM_DONVI = async () => {
       toast.current.show({
         severity: "error",
         summary: "Lỗi",
-        detail: "Không thể xóa các biên bản",
+        detail: "Không thể xóa các đơn vị",
         life: 3000,
       });
     }
@@ -384,7 +245,7 @@ const loadDM_DONVI = async () => {
 
   const onDeleteSelectedConfirm = () => {
     confirmDialog({
-      message: "Bạn có chắc chắn muốn xóa các biên bản đã chọn?",
+      message: "Bạn có chắc chắn muốn xóa các đơn vị đã chọn?",
       header: "Xác nhận xóa",
       icon: "pi pi-exclamation-triangle",
       accept: confirmDeleteSelected,
@@ -397,6 +258,35 @@ const loadDM_DONVI = async () => {
         });
       },
     });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formDataQuyetToan.mA_KHACH_HANG)
+      newErrors.mA_KHACH_HANG = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.teN_KHACH_HANG)
+      newErrors.loai = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.hop) newErrors.hop = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.cot) newErrors.cot = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.chup_buzi_ti_tu)
+      newErrors.chup_buzi_ti_tu = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.tong_so_chi_niem_phong)
+      newErrors.tong_so_chi_niem_phong = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.tong_so_chi_thu_hoi)
+      newErrors.tong_so_chi_thu_hoi = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.ly_do) newErrors.ly_do = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.cuA_TU) newErrors.cuA_TU = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.iD_GIAONHAN_TEMCHI)
+      newErrors.iD_GIAONHAN_TEMCHI = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.teN_TBA)
+      newErrors.teN_TBA = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.ngaY_NIEM_PHONG)
+      newErrors.ngaY_NIEM_PHONG = "Trường này là bắt buộc";
+    if (!formDataQuyetToan.booC_CONGQUANG)
+      newErrors.booC_CONGQUANG = "Trường này là bắt buộc";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const saveGIAONHAN_TEMCHI = async () => {
@@ -464,6 +354,7 @@ const loadDM_DONVI = async () => {
     </div>
   );
 
+
   const headerList = (options) => {
     const className = `${options.className} flex align-items-center justify-content-between`;
 
@@ -505,124 +396,48 @@ const loadDM_DONVI = async () => {
   ];
   const home = { icon: "pi pi-home", url: "/" };
 
-  const handleNavigateToQuyetToan = (rowData) => {
-    try {
-      if (!rowData.id) {
-        throw new Error("ID không hợp lệ");
-      }
-      
-      // Chuyển trang và truyền id qua query params
-      router.push({
-        pathname: '/quanlykimchi/chitietquyettoanchi',
-        query: { id_giaonhan_temchi: rowData.id }
-      });
-    } catch (err) {
-      console.error("Lỗi khi chuyển trang:", err);
-      toast.current.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: "Không thể chuyển trang quyết toán. Vui lòng thử lại",
-        life: 3000,
-      });
-    }
-  };
-  const showToast = (type, message) => {
-    toast.current.show({
-      severity: type,
-      summary: "Thông báo",
-      detail: message,
-    });
-  };
-  const handleCloseModalViewer = () => {
-    setVisibleViewer(false);
-    setBienBan({});
-  };
-  const handleOnClickKySoBtn = (bienBan) => {
-    setVisibleViewer(true);
-    setBienBan(bienBan);
-  };
   return (
     <React.Fragment>
       <div className="grid">
         <div className="col-12">
           <div className="card">
             <Toast ref={toast} />
-              <Panel header={currentMenu} className="mb-4">
-            <Divider style={{ marginTop: "0", marginBottom: "10px" }} />
-            <div className="flex flex-column lg:flex-row gap-3">
-              <div className="flex-auto">
-                <label htmlFor="MA" className="mb-2 block">
-                  Đơn vị giao
-                </label>
-                <Dropdown
-                  value={options.donViGiao}
-                  options={arrDonVi}
-                  filter
-                  onChange={(e) => {
-                    console.log(e.value);
-                    setOptions({ ...options, donViGiao: e.target.value ?? "" });
+            <Panel header="Tìm kiếm">
+              <div className="flex flex-column md:flex-row gap-3">
+                <div className="flex-1">
+                  <label className="block mb-2">Loại</label>
+                  <InputText
+                    placeholder="Nhập loại "
+                    value={formFilter.loai}
+                    onChange={(e) => handleChangeFilter("loai", e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block mb-2">Đơn vị tính</label>
+                  <InputText
+                    placeholder="Nhập đơn vị tính "
+                    value={formFilter.doN_VI_TINH}
+                    onChange={(e) =>
+                      handleChangeFilter("doN_VI_TINH", e.target.value)
+                    }
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-content-center mt-3">
+                <Button
+                  label="Tìm kiếm"
+                  style={{ backgroundColor: "#1445a7" }}
+                  onClick={() => {
+                    console.log(formFilter);
+                    setPage(1);
+                    setPageSize(5);
+                    setKeyFilter(formFilter);
                   }}
-                  optionLabel="ten"
-                  id="donViGiao"
-                  optionValue="ma_dviqly"
-                  placeholder="Chọn đơn vị"
-                  className="w-full"
-                  showClear
                 />
               </div>
-              <div className="flex-auto">
-                <label htmlFor="MA" className="mb-2 block">
-                  Đơn vị nhận
-                </label>
-                <Dropdown
-                  value={options.donViNhan}
-                  options={arrDonVi}
-                  filter
-                  onChange={(e) => {
-                    setOptions({ ...options, donViNhan: e.target.value ?? "" });
-                  }}
-                  optionLabel="ten"
-                  id="donViNhan"
-                  optionValue="ma_dviqly"
-                  placeholder="Chọn đơn vị"
-                  className="w-full"
-                  showClear
-                />
-              </div>
-
-              <div className="flex-auto">
-                <label htmlFor="TRANG_THAI" className="mb-2 block">
-                  Trạng thái
-                </label>
-                <Dropdown
-                  onChange={(e) => {
-                    setOptions({
-                      ...options,
-                      trangThai: e.target.value,
-                    });
-                  }}
-                  optionLabel="label"
-                  id="TRANG_THAI"
-                  optionValue="value"
-                  className="w-full"
-                  options={arrTrangThai}
-                  placeholder="Chọn trạng thái"
-                  value={options.trangThai}
-                  showClear
-                />
-              </div>
-            </div>
-            <div className="flex justify-content-center mt-4">
-              <Button
-                style={{ backgroundColor: "#1445a7", color: "#fff" }}
-                label="Tìm kiếm"
-                severity="info"
-                onClick={() => {
-                  loadGiaoNhanTemChi();
-                }}
-              />
-            </div>
-          </Panel>
+            </Panel>
 
             <Panel headerTemplate={headerList} className="mt-4">
               <div className="flex justify-content-end">
@@ -659,89 +474,68 @@ const loadDM_DONVI = async () => {
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 /> */}
                 <Column
-                  field="teN_DONVI_GIAO"
-                  header="Đơn vị giao"
+                  field="teN_KHACH_HANG"
+                  header="Tên khách hàng"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
-                  field="teN_DONVI_NHAN"
-                  header="Đơn vị nhận"
-                  headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                />  
-                <Column
-                  {...propSortAndFilter}
-                  field="ngaY_GIAO"
-                  header="Ngày giao"
+                  field="mA_KHACH_HANG"
+                  header="Mã khách hàng"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
                   {...propSortAndFilter}
-                  field="ngaY_NHAN"
-                  header="Ngày nhận"
-                  headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                />
-                <Column
-                  field="loai"
-                  header="Loại"
+                  field="hop"
+                  header="Hộp"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
                   {...propSortAndFilter}
-                  field="sO_LUONG_GIAO"
-                  header="Số lượng giao"
+                  field="cot"
+                  header="Cột"
+                  headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+                />
+                <Column
+                  field="teN_TBA"
+                  header="Tên TBA"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
                   {...propSortAndFilter}
-                  field="sO_LUONG_TRA"
-                  header="Số lượng trả"
+                  field="booC_CONGQUANG"
+                  header="Booc, Cổng quang"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
                   {...propSortAndFilter}
-                  field="sO_LUONG_THUHOI"
-                  header="Số lượng thu hồi"
+                  field="cuA_TU"
+                  header="Của tủ"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
-                  field="donvI_TINH"
-                  header="Đơn vị tính"
+                  {...propSortAndFilter}
+                  field="chuP_BUZI_TI_TU"
+                  header="Chủ búzi, ti tu"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
-                  field="loaI_BBAN"
-                  header="Loại biên bản"
-                  body={(rowData) => { 
-                    return rowData.loaI_BBAN === 1
-                      ? "Biên bản mượn"
-                      : rowData.loaI_BBAN === 2
-                      ? "Biên bản trả"
-                      : rowData.loaI_BBAN === 3
-                      ? "Biên bản quyết toán"
-                      : "Loại biên bản không xác định";
-                  }}
-                  
+                  field="lY_DO"
+                  header="Lý do"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
-                  field="noI_DUNG"
-                  header="Nội dung"
+                  field="ngaY_NIEM_PHONG"
+                  header="Ngày niêm phòng"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
-                  field="tranG_THAI"
-                  header="Trạng thái"
-                  body={(rowData) => {
-                    return rowData.tranG_THAI === 0
-                      ? "Đang chờ duyệt"
-                      : rowData.tranG_THAI === 1
-                      ? "C1 đã ký"
-                      : rowData.tranG_THAI === 2
-                      ? "C2 đã ký"
-                      : rowData.tranG_THAI === 3
-                      ? "Bị hủy"
-                      : "Trạng thái không xác định";
-                  }}
+                  field="tong_so_chi_niem_phong"
+                  header="Tổng số chì niêm phong"
+                  headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+                />
+                <Column
+                  field="tong_so_chi_thu_hoi"
+                  header="Tổng số chì thu hồi"
                   headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
                 />
                 <Column
@@ -753,7 +547,7 @@ const loadDM_DONVI = async () => {
                   }}
                   body={(rowData) => (
                     <div className="flex justify-content-between gap-1">
-                       {/* <Button
+                      <Button
                         size="small"
                         icon="pi pi-minus"
                         tooltip="Ký cấp 1"
@@ -768,7 +562,7 @@ const loadDM_DONVI = async () => {
                         onClick={() => handleKyC2(rowData)}
                         style={{ backgroundColor: "#1445a7", border: "none" }}
                         className="w-1rem h-2rem p-3 mr-1"
-                      /> */}
+                      />
                       <Button
                         size="small"
                         icon="pi pi-times"
@@ -779,17 +573,13 @@ const loadDM_DONVI = async () => {
                       />
                       <Button
                         size="small"
-                        icon="pi pi-file"
+                        icon="pi pi-pencil"
                         tooltip="Quyết toán"
-                        onClick={() => handleNavigateToQuyetToan(rowData)}
-                        style={{ backgroundColor: "#1445a7" }}
-                        className="w-1rem h-2rem p-3 mr-1"
-                      />
-                       <Button
-                        size="small"
-                        icon="pi pi-eye"
-                        tooltip="Biên bản"
-                        onClick={() => handleOnClickKySoBtn(rowData)}
+                        onClick={() => {
+                          setFormDataQuyetToan(rowData);
+                          setVisibleFormQuyetToan(true);
+                          setIsAdd(false);
+                        }}
                         style={{ backgroundColor: "#1445a7" }}
                         className="w-1rem h-2rem p-3 mr-1"
                       />
@@ -828,31 +618,6 @@ const loadDM_DONVI = async () => {
               )}
             </Panel>
 
-            {visibleForm && (
-              <DialogForm
-                isAdd={isAdd}
-                search={searchTerm}
-                toast={toast}
-                DM_DONVI={DM_DONVI}      
-                DM_PHONGBAN={DM_PHONGBAN}
-                // HT_NGUOIDUNG={HT_NGUOIDUNG}
-                formData={formData}
-                setFormData={setFormData}
-                loadData={loadGiaoNhanTemChi}
-                visible={visibleForm}
-                setVisible={setVisibleForm}
-              />
-            )}
-            {visibleViewer && (
-              <BienBanViewer
-                bienBan={bienBan}
-                visible={visibleViewer}
-                handleCloseModalViewer={handleCloseModalViewer}
-                showToast={showToast}
-                setBienBan={setBienBan}
-                loadData={loadGiaoNhanTemChi}
-              />
-            )}
             {visibleFormQuyetToan && (
               <DialogFormQuyetToan
                 isAdd={isAdd}
@@ -875,4 +640,4 @@ const loadDM_DONVI = async () => {
   );
 };
 
-export default GIAONHAN_TEMCHI;
+export default CHITIET_QUYETTOANCHI;

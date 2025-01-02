@@ -1,10 +1,6 @@
 import { apiClient } from "../../constants/api";
 
 export const search_QLKC_C4_GIAONHAN_TEMCHI = async (data) => {
-  console.log({
-    ...data,
-    ma_dviqly: JSON.parse(sessionStorage.getItem("current_MADVIQLY")),
-  });
   const res = await apiClient.post(
     "/QLKC_C4_GIAONHAN_TEMCHI/search_QLKC_C4_GIAONHAN_TEMCHI",
     data
@@ -58,62 +54,13 @@ export const update_kyC2_QLKC_C4_GIAONHAN_TEMCHI = async (id) => {
   );
   return res;
 };
-export const update_CD_QLKC_C4_GIAONHAN_TEMCHI = async (data) => {
-  const res = await apiClient.put(
-    "/QLKC_C4_GIAONHAN_TEMCHI/update_CD_QLKC_C4_GIAONHAN_TEMCHI",
-    data
-  );
-  return res;
-};
+
 export const update_huyPM_QLKC_C4_GIAONHAN_TEMCHI = async (id) => {
   const res = await apiClient.put(
     `/QLKC_C4_GIAONHAN_TEMCHI/update_huyPM_QLKC_C4_GIAONHAN_TEMCHI?id=${id}`,
   );
   return res;
 };
-export const update_kyC1_PM_QLKC_C4_GIAONHAN_TEMCHI = async (data) => {
-  const res = await apiClient.put(
-    "/QLKC_C4_GIAONHAN_TEMCHI/update_kyC1_PM_QLKC_C4_GIAONHAN_TEMCHI",
-    data
-  );
-  return res;
-};
-export const update_kyC1_PQT_QLKC_C4_GIAONHAN_TEMCHI = async (data) => {
-  const res = await apiClient.put(
-    "/QLKC_C4_GIAONHAN_TEMCHI/update_kyC1_PQT_QLKC_C4_GIAONHAN_TEMCHI",
-    data
-  );
-  return res;
-};
-export const update_kyC2_PM_C4_GIAONHAN_TEMCHI = async (data) => {
-  const res = await apiClient.put(
-    "/QLKC_C4_GIAONHAN_TEMCHI/update_kyC2_PM_C4_GIAONHAN_TEMCHI",
-    data
-  );
-  return res;
-};
-export const update_kyC2_PQT_C4_GIAONHAN_TEMCHI = async (data) => {
-  const res = await apiClient.put(
-    "/QLKC_C4_GIAONHAN_TEMCHI/update_kyC2_PQT_C4_GIAONHAN_TEMCHI",
-    data
-  );
-  return res;
-};
-export const update_TL_PM_QLKC_C4_GIAONHAN_TEMCHI = async (data) => {
-  const res = await apiClient.put(
-    "/QLKC_C4_GIAONHAN_TEMCHI/update_TL_PM_QLKC_C4_GIAONHAN_TEMCHI",
-    data
-  );
-  return res;
-};
-export const update_TL_PQT_QLKC_C4_GIAONHAN_TEMCHI = async (data) => {
-  const res = await apiClient.put(
-    "/QLKC_C4_GIAONHAN_TEMCHI/update_TL_PQT_QLKC_C4_GIAONHAN_TEMCHI",
-    data
-  );
-  return res;
-};
-
 export const delete_QLKC_C4_GIAONHAN_TEMCHI = async (id) => {
   console.log(id);
   const res = await apiClient.delete(
@@ -127,21 +74,16 @@ export const get_QLKC_C4_GIAONHAN_TEMCHI = async (id) => {
   );
   return res.data;
 };
-export const get_PM_QLKC_C4_GIAONHAN_TEMCHI = async (id) => {
-  const res = await apiClient.get(
-    "/QLKC_C4_GIAONHAN_TEMCHI/get_PM_QLKC_C4_GIAONHAN_TEMCHI?id=" + id
-  );
-  return res.data;
-};
-export const get_PQT_QLKC_C4_GIAONHAN_TEMCHI = async (id) => {
-  const res = await apiClient.get(
-    "/QLKC_C4_GIAONHAN_TEMCHI/get_PQT_QLKC_C4_GIAONHAN_TEMCHI?id=" + id
-  );
-  return res.data;
-};
+
 export const getAll_QLKC_C4_GIAONHAN_TEMCHI = async () => {
   const res = await apiClient.get(
     "/QLKC_C4_GIAONHAN_TEMCHI/getAll_QLKC_C4_GIAONHAN_TEMCHI"
+  );
+  return res.data;
+};
+export const get_HT_NGUOIDUNGbyMA_DVIQLY = async (ma_dviqly) => {
+  const res = await apiClient.get(
+    "/QLKC_C4_GIAONHAN_TEMCHI/get_HT_NGUOIDUNGbyMA_DVIQLY/?ma_dviqly="+ma_dviqly
   );
   return res.data;
 };

@@ -4,6 +4,7 @@ import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { QLKC_C3_GIAONHAN_TEMCHI } from "../../../models/QLKC_C3_GIAONHAN_TEMCHI";
 import { insert_QLKC_C3_GIAONHAN_TEMCHI, update_QLKC_C3_GIAONHAN_TEMCHI } from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
+import { getDM_PHONGBANByMA_DVIQLY } from "../../../services/quantrihethong/DM_PHONGBANService";
 import { Dropdown } from "primereact/dropdown";
 import { Calendar } from "primereact/calendar";
 
@@ -14,10 +15,14 @@ export const InputDM_C3Modal = ({
   setVisible,
   toast,
   loadData,
+  donViArr,
+  bienBan,
+  setBienBan,
 }) => {
   const [C3GiaoNhanTemChi, setC3GiaoNhanTemChi] = useState({ ...QLKC_C3_GIAONHAN_TEMCHI });
   const [errors, setErrors] = useState({});
   const [dsDonvi, setDsDonvi] = useState([]);
+  const [phongBanArr, setPhongBanArr] = useState([]);
 
   const getDSDVIQLY = () => {
     const storedDonvi = sessionStorage.getItem("ds_donvi");
@@ -120,6 +125,17 @@ export const InputDM_C3Modal = ({
     }
   };
 
+  const getAllD_PhongBan = async () => {
+    try {
+      const res = await getDM_PHONGBANByMA_DVIQLY("PA23");
+      setPhongBanArr(res);
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+  getAllD_PhongBan();
+
+
   return (
     <Dialog
       header={isUpdate ? "Sửa thông tin giao nhận tem chì C3" : "Thêm mới giao nhận tem chì C3"}
@@ -135,14 +151,27 @@ export const InputDM_C3Modal = ({
             <label htmlFor="don_vi_giao" className="mb-2"> Đơn vị giao </label>
 
             <Dropdown
+              className="mt-2 w-full"
+              value={bienBan?.don_vi_giao}
+              options={phongBanArr}
+              filter
+              onChange={(e) => {
+                const donVi = donViArr.find((item) => item.id === e.value);
+                setBienBan({
+                  ...bienBan,
+                  don_vi_giao: e.value,
+                });
+              }}
               id="don_vi_giao"
-              value={C3GiaoNhanTemChi.don_vi_giao}
-              options={dsDonvi}
-              onChange={(e) => handleInputChange("don_vi_giao", e.value)}
+              optionValue="id"
               optionLabel="ten"
-              optionValue="ma_dviqly"
-              placeholder="Chọn đơn vị giao"
-              className="w-full"/>
+              placeholder="Chọn đơn vị "
+              onFocus={() => {
+                setErrors({ ...errors, don_vi_giao: null });
+              }} />
+              {errors?.don_vi_giao&& (
+              <small className="p-error">{errors.don_vi_giao}</small>
+            )}
           </div>
 
           <div className="flex flex-column flex-1">
