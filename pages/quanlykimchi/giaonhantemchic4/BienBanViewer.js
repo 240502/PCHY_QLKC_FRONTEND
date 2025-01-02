@@ -15,6 +15,7 @@ import {
   update_kyC1_QLKC_C4_GIAONHAN_TEMCHI,
   update_kyC2_QLKC_C4_GIAONHAN_TEMCHI,
   getAll_HT_NGUOIDUNG,
+  update_NguoiNhan_QLKC_C4_GIAONHAN_TEMCHI,
 } from "../../../services/quanlykimchi/QLKC_C4_GIAONHAN_TEMCHIService";
 import { QLKC_BBAN_BANGIAO_KIM } from "../../../models/QLKC_BBAN_BANGIAO_KIM";
 const BienBanViewer = ({
@@ -130,9 +131,10 @@ const BienBanViewer = ({
     try {
       const data = {
         ht_nguoidung_id: userId,
-        bienban_id: bienBan.id_bienban,
+        bienban_id: bienBan.id,
       };
-      const res = await updateNguoiNhan(data);
+      const res = await update_NguoiNhan_QLKC_C4_GIAONHAN_TEMCHI(data);
+      console.log("update nguoi nhan",res);
       loadData();
     } catch (err) {
       console.log(err);

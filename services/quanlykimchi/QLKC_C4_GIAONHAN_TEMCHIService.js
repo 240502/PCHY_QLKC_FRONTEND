@@ -7,6 +7,13 @@ export const search_QLKC_C4_GIAONHAN_TEMCHI = async (data) => {
   );
   return res.data;
 };
+export const update_NguoiNhan_QLKC_C4_GIAONHAN_TEMCHI = async (data) => {
+  const res = await apiClient.put(
+    "/QLKC_C4_GIAONHAN_TEMCHI/update_NguoiNhan_QLKC_C4_GIAONHAN_TEMCHI",
+    data
+  );
+  return res;
+};
 export const create_QLKC_C4_MUON_TEMCHI = async (data) => {
   const res = await apiClient.post(
     "/QLKC_C4_GIAONHAN_TEMCHI/create_QLKC_C4_MUON_TEMCHI",
