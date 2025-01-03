@@ -83,6 +83,7 @@ const BienBanViewer = ({
   }, []);
 
   useEffect(() => {
+    console.log("bienBan", bienBan.ngay_giao);
     setEvents((prv) =>
       prv.map((e) => {
         if (
@@ -253,11 +254,9 @@ const BienBanViewer = ({
                     <br></br>
                     <small className="text-color-secondary">
                       {item.date
-                        ? `${new Date(item.date).getDate()}-${new Date(
-                            item.date
-                          ).getMonth()}-${new Date(
-                            item.date
-                          ).getFullYear()} ${new Date(
+                        ? `${new Date(item.date).getDate()}-${
+                            new Date(item.date).getMonth() + 1
+                          }-${new Date(item.date).getFullYear()} ${new Date(
                             item.date
                           ).getHours()}:${new Date(
                             item.date

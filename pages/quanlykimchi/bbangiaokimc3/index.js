@@ -87,37 +87,31 @@ export const BBanGiaoKimC3 = () => {
             : userLocal.id,
       };
       const res = await search_BBAN_BANGIAO_KIM(data);
-      console.log("bien ban", res?.data);
       let newBienBanArr = [];
+      const enrichedData = await Promise.all(
+        res?.data.map(async (item) => {
+          let nguoiNhan;
+          let nguoiGiao;
 
-      res?.data.forEach(async (bb, index) => {
-        let nguoiNhan = {};
-        let nguoiGiao = {};
-        if (bb?.nguoi_nhan) {
           try {
-            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoi_nhan);
-            nguoiNhan = res;
+            nguoiNhan = await HT_NGUOIDUNG_Service.getById(item.nguoi_nhan);
           } catch (err) {
-            console.log(err);
+            console.error(err);
           }
-        }
-        if (bb?.nguoi_giao) {
           try {
-            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoi_giao);
-            nguoiGiao = res;
+            nguoiGiao = await HT_NGUOIDUNG_Service.getById(item.nguoi_giao);
           } catch (err) {
-            console.log(err);
+            console.error(err);
           }
-        }
 
-        newBienBanArr.push({
-          ...bb,
-          ten_nguoi_giao: nguoiGiao.ho_ten,
-          ten_nguoi_nhan: nguoiNhan.ho_ten,
-        });
-        setBienBanArr(newBienBanArr);
-      });
-
+          return {
+            ...item,
+            ten_nguoi_nhan: nguoiNhan ? nguoiNhan.ho_ten : "Không xác định",
+            ten_nguoi_giao: nguoiGiao ? nguoiGiao.ho_ten : "Không xác định",
+          };
+        })
+      );
+      setBienBanArr(enrichedData);
       setPageCount(Math.ceil(res.totalItems / pageSize));
     } catch (err) {
       console.log(err.message);
@@ -153,8 +147,8 @@ export const BBanGiaoKimC3 = () => {
     } else {
       const filtered = bienBanArr.filter(
         (item) =>
-          item.nguoi_giao.toLowerCase().includes(content.toLowerCase()) ||
-          item.nguoi_nhan.toLowerCase().includes(content.toLowerCase())
+          item.ten_nguoi_giao.toLowerCase().includes(content.toLowerCase()) ||
+          item.ten_nguoi_nhan.toLowerCase().includes(content.toLowerCase())
       );
       setFilteredArr(filtered);
     }
@@ -163,6 +157,9 @@ export const BBanGiaoKimC3 = () => {
     loadDataDropdownDonVi();
     getAllD_PhongBan();
   }, []);
+  useEffect(() => {
+    setFilteredArr(bienBanArr);
+  }, [bienBanArr]);
   useEffect(() => {
     loadDataTable();
   }, [pageIndex, pageSize, options.loaiBienBan]);

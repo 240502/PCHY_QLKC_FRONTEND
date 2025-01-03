@@ -14,6 +14,7 @@ import {
   update_QLKC_BBAN_BANGIAO_KIMKyC1,
   update_QLKC_BBAN_BANGIAO_KIMKyC2,
 } from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
+import { FilterMatchMode, FilterOperator } from "primereact/api";
 import {
   D_KIMService,
   get_D_KIM_ById,
@@ -59,7 +60,6 @@ const BBAN_GIAO_KIMTable = ({
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
-
   //Xử lý xóa bản ghi
   const acceptDelete = async () => {
     if (isMultiDelete) {
@@ -89,8 +89,6 @@ const BBAN_GIAO_KIMTable = ({
           showToast("error", "Xóa không thành công!");
           console.log(err.message);
         }
-        console.log(index + 1);
-        console.log(selectedRecords.length);
         if (index + 1 === selectedRecords.length) {
           console.log("oke");
           loadData();
@@ -110,7 +108,6 @@ const BBAN_GIAO_KIMTable = ({
           id_kim: null,
         };
         if (kimId.length > 1) {
-          console.log(kimId);
           kimId.forEach((id) => {
             update_MA_DVIQLY_D_KIM({ ...dataUpdate, id_kim: id });
           });
@@ -135,7 +132,6 @@ const BBAN_GIAO_KIMTable = ({
   // Gọi api hủy biên bản
   const rejectBienBan = async () => {
     try {
-      console.log("bien ban", bienBan);
       const kimId =
         bienBan.id_kim.length === 1
           ? [Number(bienBan.id_kim)]
@@ -166,7 +162,6 @@ const BBAN_GIAO_KIMTable = ({
   const update_MA_DVIQLY_D_KIM = async (id_kim) => {
     try {
       const res = await D_KIMService.update_MA_DVIQLY(id_kim);
-      console.log(res);
     } catch (err) {
       console.log(err);
     }
@@ -178,7 +173,11 @@ const BBAN_GIAO_KIMTable = ({
         {rowData.trang_thai === 0 && current_MADVIQLY === "PA23" && (
           <>
             <Button
-              style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+              style={{
+                marginRight: "10px",
+                backgroundColor: "#1445a7",
+                fontSize: "12px",
+              }}
               icon="pi pi-pencil"
               tooltip="Sửa"
               tooltipOptions={{ position: "top" }}
@@ -191,7 +190,11 @@ const BBAN_GIAO_KIMTable = ({
               icon="pi pi-trash"
               tooltip="Xóa"
               tooltipOptions={{ position: "top" }}
-              style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+              style={{
+                marginRight: "10px",
+                backgroundColor: "#1445a7",
+                fontSize: "12px",
+              }}
               onClick={() => {
                 setShowConfirmDialog(true);
                 setBienBan(rowData);
@@ -206,16 +209,16 @@ const BBAN_GIAO_KIMTable = ({
             icon="pi pi-times"
             tooltip={"Hủy biên bản"}
             tooltipOptions={{ position: "top" }}
-            style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+            style={{
+              marginRight: "10px",
+              backgroundColor: "#1445a7",
+              fontSize: "12px",
+            }}
             onClick={() => {
               setShowConfirmCancelDialog(true);
               setBienBan(rowData);
             }}
           />
-        )}
-        {console.log(
-          rowData.trang_thai !== 0 &&
-            (current_MADVIQLY !== "PA23" || current_MADVIQLY === "PA23")
         )}
 
         <Button
@@ -234,9 +237,9 @@ const BBAN_GIAO_KIMTable = ({
           tooltipOptions={{ position: "top" }}
           style={{
             backgroundColor: "#1445a7",
+            fontSize: "12px",
           }}
           onClick={() => {
-            console.log("on click");
             handleOnClickKySoBtn(rowData);
           }}
         ></Button>
@@ -302,12 +305,12 @@ const BBAN_GIAO_KIMTable = ({
   };
   useEffect(() => {
     handleFilterData(searchTerm);
-  }, [searchTerm, data]);
+  }, [searchTerm]);
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user") || "{}");
     setUser(user);
     getD_KimInTable();
-    console.log("kimArr", kimArr);
+    console.log("data", data);
   }, []);
 
   return (
@@ -383,20 +386,29 @@ const BBAN_GIAO_KIMTable = ({
                 return (
                   <>
                     <p>{rowData.ten_nguoi_giao}</p>
-                    <p>Chưa ký</p>
+                    <p
+                      style={{
+                        color: "red",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                      }}
+                    >
+                      Chưa ký
+                    </p>
                   </>
                 );
               } else {
                 return (
                   <div>
                     <p>{rowData.ten_nguoi_giao}</p>
-                    <p>
-                      Đã ký {new Date(rowData.ngay_giao).getDate()}-
-                      {new Date(rowData.ngay_giao).getMonth() + 1}-
-                      {new Date(rowData.ngay_giao).getFullYear()}{" "}
-                      {new Date(rowData.ngay_giao).getHours()}:
-                      {new Date(rowData.ngay_giao).getMinutes()}:
-                      {new Date(rowData.ngay_giao).getSeconds()}
+                    <p
+                      style={{
+                        color: "green",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                      }}
+                    >
+                      Đã ký
                     </p>
                   </div>
                 );
@@ -414,20 +426,29 @@ const BBAN_GIAO_KIMTable = ({
                 return (
                   <>
                     <p>{rowData.ten_nguoi_nhan}</p>
-                    <p>Chưa ký</p>
+                    <p
+                      style={{
+                        color: "red",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                      }}
+                    >
+                      Chưa ký
+                    </p>
                   </>
                 );
               } else {
                 return (
                   <div>
                     <p>{rowData.ten_nguoi_nhan}</p>
-                    <p>
-                      Đã ký {new Date(rowData.ngay_nhan).getDate()}-
-                      {new Date(rowData.ngay_nhan).getMonth() + 1}-
-                      {new Date(rowData.ngay_nhan).getFullYear()}{" "}
-                      {new Date(rowData.ngay_nhan).getHours()}:
-                      {new Date(rowData.ngay_nhan).getMinutes()}:
-                      {new Date(rowData.ngay_nhan).getSeconds()}
+                    <p
+                      style={{
+                        color: "green",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                      }}
+                    >
+                      Đã ký
                     </p>
                   </div>
                 );
