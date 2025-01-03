@@ -14,8 +14,8 @@ import { getDM_PHONGBANByMA_DVIQLY } from "../../../services/quantrihethong/DM_P
 import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
 const arrTrangThai = [
   { label: "Soạn thảo", value: 0 },
-  { label: "Ký cấp 1", value: 1 },
-  { label: "Ký cấp 2", value: 2 },
+  { label: "Đã ký cấp 1", value: 1 },
+  { label: "Đã ký cấp 2", value: 2 },
 ];
 export const BBanGiaoKimC3 = () => {
   const currentMenu = sessionStorage.getItem("currentMenu");

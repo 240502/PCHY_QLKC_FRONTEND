@@ -33,6 +33,7 @@ const QuanLyMenuVaiTro = ({
     const map = {};
     const roots = [];
 
+    // Tạo bản đồ các item menu
     menuItems.forEach((item) => {
       map[item.id] = {
         key: item.id,
@@ -46,23 +47,27 @@ const QuanLyMenuVaiTro = ({
         children: [],
       };
     });
-    console.log(vaiTro)
+
+    // Duyệt qua các item và tạo cây
     menuItems.forEach((item) => {
       if (item.parent_id === null) {
+        // Nếu là menu gốc, thêm vào roots
         roots.push(map[item.id]);
       } else {
+        // Nếu có parent_id, gán vào children của menu cha
         if (map[item.parent_id]) {
           map[item.parent_id].children.push(map[item.id]);
         }
       }
     });
 
+    // Trả về cây menu với các items đã được xây dựng
     return roots;
   };
   const GetHT_PhanQuyenByMaNhomTV = async (treeData) => {
     try {
       const res = await get_HT_PHANQUYENByMA_NHOM_TV(vaiTro.id);
-      console.log(res)
+      console.log(res);
       setHT_PhanQuyenList(res);
       handleAutoSelect(res, treeData);
     } catch (e) {
@@ -74,17 +79,18 @@ const QuanLyMenuVaiTro = ({
       const menus = await get_All_HT_MENU();
       const treeData = buildTree(menus);
       setArrMenu(treeData);
-      setMenuInit(menus)
+      setMenuInit(menus);
       GetHT_PhanQuyenByMaNhomTV(treeData);
     };
     fetchData();
   }, []);
 
-  //hàm xử lý việc hiển thị các chức năng đã được gán cho nhóm và tự động select các các chức năng đã được gán
   const handleAutoSelect = (arrHT_PHANQUYEN, treeData) => {
     // Lấy danh sách menu có quyền được gán
     const menus = treeData.filter((menu) => {
-      const isExists = arrHT_PHANQUYEN.some((item) => item.menu_id === menu.key);
+      const isExists = arrHT_PHANQUYEN.some(
+        (item) => item.menu_id === menu.key
+      );
       if (isExists) {
         return menu;
       }
@@ -92,17 +98,30 @@ const QuanLyMenuVaiTro = ({
 
     const selectedKeys = {};
 
-    menus.forEach((menu) => {
+    // Hàm kiểm tra và chọn các menu con ở nhiều cấp
+    const processMenuSelection = (menu) => {
       let hasPartialCheck = false; // Biến kiểm tra trạng thái `partialChecked`
-      let hasFullCheck = true;     // Biến kiểm tra nếu tất cả con đều được chọn
+      let hasFullCheck = true; // Biến kiểm tra nếu tất cả con đều được chọn
 
-      // Xử lý menu cha
+      // Duyệt qua tất cả các cấp con của menu (recursive)
       menu.children.forEach((child) => {
-        const isChildSelected = arrHT_PHANQUYEN.some((item) => item.menu_id === child.data.id);
+        const isChildSelected = arrHT_PHANQUYEN.some(
+          (item) => item.menu_id === child.data.id
+        );
+
+        // Nếu con được chọn, đánh dấu trạng thái
         if (isChildSelected) {
-          selectedKeys[child.data.id] = { checked: true, partialChecked: false };
+          selectedKeys[child.data.id] = {
+            checked: true,
+            partialChecked: false,
+          };
         } else {
           hasFullCheck = false; // Nếu có con không được chọn, cha không thể `checked`
+        }
+
+        // Nếu có children ở các cấp sâu hơn, tiếp tục kiểm tra
+        if (child.children && child.children.length > 0) {
+          processMenuSelection(child); // Đệ quy để xử lý các cấp con
         }
       });
 
@@ -114,53 +133,68 @@ const QuanLyMenuVaiTro = ({
         );
 
         selectedKeys[menu.data.id] = {
-          checked: hasFullCheck,         // Đánh dấu nếu tất cả con đều được chọn
+          checked: hasFullCheck, // Đánh dấu nếu tất cả con đều được chọn
           partialChecked: hasPartialCheck && !hasFullCheck, // Đánh dấu `partialChecked`
         };
       } else {
         // Nếu không có con, kiểm tra menu cha trực tiếp
-        const isParentSelected = arrHT_PHANQUYEN.some((item) => item.menu_id === menu.data.id);
+        const isParentSelected = arrHT_PHANQUYEN.some(
+          (item) => item.menu_id === menu.data.id
+        );
         if (isParentSelected) {
           selectedKeys[menu.data.id] = { checked: true, partialChecked: false };
         }
       }
+    };
+
+    // Duyệt qua các menu để xác định trạng thái `checked` cho tất cả menu và các cấp con
+    menus.forEach((menu) => {
+      processMenuSelection(menu); // Gọi hàm để xử lý menu cha và các cấp con
     });
 
-    // Cập nhật lại state
+    // Cập nhật lại state `selectedNodeKeys`
     setSelectedNodeKeys(selectedKeys);
-    // Lọc chỉ các menu có trong selectedKeys và lưu vào state
-    // Lọc các menu cha và lọc tiếp các children đã được chọn
-    const filteredMenus = menus.map((menu) => {
-      // Lọc các children của menu cha
-      const filteredChildren = menu.children.filter((child) => {
-        // Kiểm tra xem child có được chọn hay không trong selectedKeys
-        return selectedKeys[child.data.id] && selectedKeys[child.data.id].checked === true;
-      });
 
-      // Nếu menu cha hoặc có bất kỳ children nào được chọn, giữ lại menu cha với children đã lọc
-      if ((selectedKeys[menu.data.id] && selectedKeys[menu.data.id].checked === true) || filteredChildren.length > 0) {
-        return {
-          ...menu,
-          children: filteredChildren, // Cập nhật lại các children đã lọc
-        };
-      }
+    // Lọc các menu đã được chọn và lưu vào state
+    const filteredMenus = menus
+      .map((menu) => {
+        // Lọc các children của menu cha
+        const filteredChildren = menu.children.filter((child) => {
+          return (
+            selectedKeys[child.data.id] &&
+            selectedKeys[child.data.id].checked === true
+          );
+        });
 
-      // Nếu không có gì được chọn, loại bỏ menu này
-      return null;
-    }).filter(menu => menu !== null); // Loại bỏ các menu không có gì được chọn
+        // Nếu menu cha hoặc có bất kỳ children nào được chọn, giữ lại menu cha với children đã lọc
+        if (
+          (selectedKeys[menu.data.id] &&
+            selectedKeys[menu.data.id].checked === true) ||
+          filteredChildren.length > 0
+        ) {
+          return {
+            ...menu,
+            children: filteredChildren, // Cập nhật lại các children đã lọc
+          };
+        }
+
+        // Nếu không có gì được chọn, loại bỏ menu này
+        return null;
+      })
+      .filter((menu) => menu !== null); // Loại bỏ các menu không có gì được chọn
 
     // Cập nhật lại state với các menu đã được lọc
     setNodes(filteredMenus);
   };
 
-  const delete_QUYEN=async(id)=>{
+  const delete_QUYEN = async (id) => {
     try {
       const res = await delete_HT_PHANQUYEN(id);
       return res;
     } catch (e) {
       console.log(e.message);
     }
-  }
+  };
 
   const MAX_LENGTH = 8;
 
@@ -174,42 +208,54 @@ const QuanLyMenuVaiTro = ({
     return text;
   };
 
-  const handleSelectionChange = useCallback((e) => {
-    let listSelect = e.value
-    console.log(selectedNodeKeys)
-    setSelectedNodeKeys(listSelect)
-  },
-    [selectedNodeKeys]);
-
+  const handleSelectionChange = useCallback(
+    (e) => {
+      let listSelect = e.value;
+      console.log(selectedNodeKeys);
+      setSelectedNodeKeys(listSelect);
+    },
+    [selectedNodeKeys]
+  );
 
   useEffect(() => {
-    
     const treeData = buildTree(menuInit);
-    const filteredMenus = treeData.map((menu) => {
-      // Lọc các children của menu cha
-      const filteredChildren = menu.children.filter((child) => {
-        // Kiểm tra xem child có được chọn hay không trong selectedKeys
-        return selectedNodeKeys[child.data.id] && selectedNodeKeys[child.data.id].checked === true;
-      });
+    const filteredMenus = treeData
+      .map((menu) => {
+        // Lọc các children của menu cha
+        const filteredChildren = menu.children.filter((child) => {
+          // Kiểm tra xem child có được chọn hay không trong selectedKeys
+          return (
+            selectedNodeKeys[child.data.id] &&
+            selectedNodeKeys[child.data.id].checked === true
+          );
+        });
 
-      // Nếu menu cha hoặc có bất kỳ children nào được chọn, giữ lại menu cha với children đã lọc
-      if ((selectedNodeKeys[menu.data.id] && selectedNodeKeys[menu.data.id].checked === true) || filteredChildren.length > 0) {
-        return {
-          ...menu,
-          children: filteredChildren, // Cập nhật lại các children đã lọc
-        };
-      }
+        // Nếu menu cha hoặc có bất kỳ children nào được chọn, giữ lại menu cha với children đã lọc
+        if (
+          (selectedNodeKeys[menu.data.id] &&
+            selectedNodeKeys[menu.data.id].checked === true) ||
+          filteredChildren.length > 0
+        ) {
+          return {
+            ...menu,
+            children: filteredChildren, // Cập nhật lại các children đã lọc
+          };
+        }
 
-      // Nếu không có gì được chọn, loại bỏ menu này
-      return null;
-    }).filter(menu => menu !== null); // Loại bỏ các menu không có gì được chọn
-    setNodes(filteredMenus)
-  }, [selectedNodeKeys])
+        // Nếu không có gì được chọn, loại bỏ menu này
+        return null;
+      })
+      .filter((menu) => menu !== null); // Loại bỏ các menu không có gì được chọn
+    setNodes(filteredMenus);
+  }, [selectedNodeKeys]);
 
   const handleCreateHT_PhanQuyen = async () => {
-    console.log(nodes)
+    console.log(nodes);
     let HT_PHANQUYENList = [];
-    nodes.forEach((node) => {
+
+    // Hàm đệ quy để duyệt qua cây
+    const processNode = (node) => {
+      // Thêm node hiện tại vào danh sách
       const newModel = {
         tieu_de: null,
         ghi_chu: null,
@@ -234,39 +280,15 @@ const QuanLyMenuVaiTro = ({
         ma_dviqly: null,
       };
       HT_PHANQUYENList.push(newModel);
-      if (node.children.length > 0) {
-        node.children.forEach((children) => {
-          const newModel = {
-            tieu_de: null,
-            ghi_chu: null,
-            tt_khoa: null,
-            nguoi_khoa: null,
-            tt_xoa: null,
-            nguoi_xoa: null,
-            ngay_tao: null,
-            nguoi_tao: null,
-            ngay_sua: null,
-            nguoi_sua: null,
-            menu_id: children.data.id,
-            view: null,
-            insert: null,
-            edit: null,
-            delete: null,
-            export: null,
-            dong_bo: null,
-            hard_edit: null,
-            chuyen_buoc: null,
-            ma_nhom_tv: vaiTro.id,
-            ma_dviqly: null,
-          };
-          HT_PHANQUYENList.push(newModel);
-        });
-      }
+
+      // Kiểm tra và thêm node cha nếu cần
       if (node.data.parent_id) {
-        console.log(arrMenu)
-        let nodecha = arrMenu.find(item => item.key === node.data.parent_id)
-        if (!HT_PHANQUYENList.find(item => item.menu_id === nodecha.data.id)) {
-          const newModel = {
+        let nodecha = arrMenu.find((item) => item.key === node.data.parent_id);
+        if (
+          nodecha &&
+          !HT_PHANQUYENList.find((item) => item.menu_id === nodecha.data.id)
+        ) {
+          const parentModel = {
             tieu_de: null,
             ghi_chu: null,
             tt_khoa: null,
@@ -289,19 +311,31 @@ const QuanLyMenuVaiTro = ({
             ma_nhom_tv: vaiTro.id,
             ma_dviqly: null,
           };
-          HT_PHANQUYENList.push(newModel);
+          HT_PHANQUYENList.push(parentModel);
         }
       }
 
-    });
+      // Duyệt qua các children
+      if (node.children && node.children.length > 0) {
+        node.children.forEach((child) => processNode(child));
+      }
+    };
+
+    // Bắt đầu duyệt từ các node gốc
+    nodes.forEach((node) => processNode(node));
+
+    // Xóa quyền cũ
     await Promise.all(ht_phanQuyenList.map((item) => delete_QUYEN(item.id)));
-  let newList = HT_PHANQUYENList;
-    
+
+    // Gán danh sách mới
+    let newList = HT_PHANQUYENList;
+    console.log(newList);
+
     if (newList.length > 0) {
       try {
         // Sử dụng Promise.all để đợi tất cả các lệnh insert hoàn thành
         await Promise.all(newList.map((item) => InsertHT_PhanQuyen(item)));
-        
+
         // Nếu tất cả thành công, hiển thị thông báo thành công
         toast.current.show({
           severity: "success",
@@ -323,52 +357,6 @@ const QuanLyMenuVaiTro = ({
     }
   };
 
-  const handleDeleteHT_PhanQuyen = async () => {
-    const HT_PHANQUYENList = ht_phanQuyenList.filter((item) => {
-      const isExists = unselectNodes.some((node) => {
-        let exists = false;
-        if (node.data.id === item.menu_id) exists = true;
-        if (node.children.length > 0) {
-          node.children.forEach((child) => {
-            if (child.data.id === item.menu_id) {
-              exists = true;
-            }
-          });
-        }
-        return exists;
-      });
-      if (isExists) {
-        return item;
-      }
-    });
-
-    try {
-      // Sử dụng Promise.all để đợi tất cả các lệnh insert hoàn thành
-      await Promise.all(
-        HT_PHANQUYENList.map((item) => {
-          DeleteHT_PhanQuyen(item.id);
-        })
-      );
-
-      // Nếu tất cả thành công, hiển thị thông báo thành công
-      toast.current.show({
-        severity: "success",
-        summary: "Thành công",
-        detail: "Đã lưu phân quyền thành công",
-      });
-      setVisible(false);
-    } catch (e) {
-      // Nếu có lỗi xảy ra trong quá trình insert
-      toast.current.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: "Có lỗi xảy ra trong quá trình lưu phân quyền",
-      });
-      console.log(e.message);
-    }
-  };
-  // hàm handleDuplicateData sẽ trả về mảng đã loại bỏ các chức năng được mà nhóm người dùng đã có, chỉ giữ lại những chức năng mới
-  
   const InsertHT_PhanQuyen = async (data) => {
     try {
       const res = await insert_HT_PHANQUYEN(data);
@@ -378,19 +366,10 @@ const QuanLyMenuVaiTro = ({
       throw e; // Ném lỗi để Promise.all có thể bắt lỗi
     }
   };
-  const DeleteHT_PhanQuyen = async (data) => {
-    try {
-      const res = await delete_HT_PHANQUYEN(data);
-      return res; // Trả về kết quả để Promise.all có thể theo dõi
-    } catch (e) {
-      console.log(e.message);
-      throw e; // Ném lỗi để Promise.all có thể bắt lỗi
-    }
-  };
 
   const headerTemplate = (
     <div className="flex justify-content-between align-items-center">
-      <span className='text-xl font-bold'>PHÂN QUYỀN MENU</span>
+      <span className="text-xl font-bold">PHÂN QUYỀN MENU</span>
       <div className="flex gap-2">
         <Button
           label="Lưu"
@@ -420,7 +399,7 @@ const QuanLyMenuVaiTro = ({
       header={headerTemplate}
       style={{
         width: "90vw",
-        maxWidth: "1200px"
+        maxWidth: "1200px",
       }}
       className="p-fluid"
       visible={visible}
@@ -435,10 +414,10 @@ const QuanLyMenuVaiTro = ({
             onSelectionChange={handleSelectionChange}
             selectionMode="checkbox"
             onSelect={(e) => {
-              setNodes(prevNodes => {
-                console.log(prevNodes)
-                return [...prevNodes, e.node]
-              })
+              setNodes((prevNodes) => {
+                console.log(prevNodes);
+                return [...prevNodes, e.node];
+              });
             }}
             value={arrMenu}
             scrollable
@@ -480,6 +459,7 @@ const QuanLyMenuVaiTro = ({
           </TreeTable>
         </div>
 
+        {/* đã chọn */}
         <div className="flex-1">
           <TreeTable
             value={nodes}
