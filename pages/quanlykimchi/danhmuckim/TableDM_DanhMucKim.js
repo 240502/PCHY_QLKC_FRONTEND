@@ -10,7 +10,7 @@ import { Toast } from "primereact/toast";
 import { Dropdown } from "primereact/dropdown";
 import { FilterMatchMode, PrimeIcons } from "primereact/api";
 import { InputText } from "primereact/inputtext";
-import { delete_QLKC_D_KIM } from "../../../services/quanlykimchi/D_KIMService";
+import { delete_D_KIM } from "../../../services/quanlykimchi/D_KIMService";
 const TableDM_DanhMucKim = ({
   setVisible,
   setIsUpdate,
@@ -47,10 +47,12 @@ const TableDM_DanhMucKim = ({
 
   const confirm = async () => {
     setIsHide(false);
+
     try {
       if (isMultiDelete) {
+        console.log("selected records", selectedRecords);
         await Promise.all(
-          selectedRecords.map((record) => delete_QLKC_D_KIM(record.id))
+          selectedRecords.map((record) => delete_D_KIM(record.id_kim))
         );
         toast.current.show({
           severity: "success",
@@ -58,8 +60,9 @@ const TableDM_DanhMucKim = ({
           detail: "Xóa các bản ghi thành công",
           life: 3000,
         });
+        setSelectedRecords([]);
       } else {
-        await delete_QLKC_D_KIM(id);
+        await delete_D_KIM(id);
         toast.current.show({
           severity: "success",
           summary: "Thông báo",
@@ -67,6 +70,7 @@ const TableDM_DanhMucKim = ({
           life: 3000,
         });
       }
+      console.log("load data after deleted");
       loadData();
     } catch (err) {
       console.log(err);
@@ -95,7 +99,6 @@ const TableDM_DanhMucKim = ({
             setVisible(true);
             setIsUpdate(true);
             setDanhMucKim(rowData);
-            console.log(rowData);
           }}
         />
         <Button
@@ -107,7 +110,7 @@ const TableDM_DanhMucKim = ({
           }}
           onClick={() => {
             setIsHide(true);
-            setId(rowData.id);
+            setId(rowData.id_kim);
             setIsMultiDelete(false);
           }}
         />
@@ -226,7 +229,6 @@ const TableDM_DanhMucKim = ({
             header="Loại má kim"
             className="min-w-10rem"
             body={(rowData) => {
-              console.log("kim", rowData);
               return rowData.loai_ma_kim === 1 ? "Kìm 1 pha" : "Kìm 3 pha";
             }}
           ></Column>
@@ -256,7 +258,7 @@ const TableDM_DanhMucKim = ({
           ></Column>
         </DataTable>
 
-        <div className="flex flex-column md:flex-row justify-content-between align-items-center gap-3 mt-4">
+        <div className="flex flex-column md:flex-row justify-content-center align-items-center gap-3 mt-4">
           <div className="flex align-items-center">
             <Button
               outlined

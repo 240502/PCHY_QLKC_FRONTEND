@@ -54,8 +54,7 @@ export const update_D_KIM = async (data) => {
 };
 
 export const delete_D_KIM = async (id) => {
-  console.log(id);
-  const res = await apiClient.delete("/D_KIM/delete_D_KIM?ID=" + id);
+  const res = await apiClient.delete("/D_KIM/delete_D_KIM?id_kim=" + id);
   return res;
 };
 

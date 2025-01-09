@@ -16,7 +16,6 @@ import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
 
 const DanhMucKim = () => {
   const currentMenu = sessionStorage.getItem("currentMenu");
-
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [pageCount, setPageCount] = useState(0);
@@ -61,11 +60,9 @@ const DanhMucKim = () => {
         loaiMaKim: options.loaiMaKim,
         trangThai: options.trangThai,
       };
-      console.log("data", data);
       const res = await D_KIMService.search_D_KIM(data);
       setArrDanhMucKim(res.data);
-      console.log("danh muc kim", res);
-      setPageCount(Math.ceil(res.totalRecord / pageSize));
+      setPageCount(Math.ceil(res.totalItems / pageSize));
     } catch (err) {
       console.log(err);
       setArrDanhMucKim([]);
@@ -90,9 +87,9 @@ const DanhMucKim = () => {
     getHT_NGUOIDUNGByMA_DVIQLY();
   }, []);
   useEffect(() => {
+    console.log("page size", pageSize);
     loadData();
-  }, [page, pageSize, options]);
-
+  }, [page, pageSize, options.loaiMaKim]);
   return (
     <div className="grid">
       <div className="col-12">
@@ -106,7 +103,7 @@ const DanhMucKim = () => {
                   Đơn vị quản lý
                 </label>
                 <Dropdown
-                  value={options.donViQuanLy}
+                  value={options.maDviqly}
                   options={donViQuanLy}
                   filter
                   onChange={(e) => {
@@ -129,7 +126,7 @@ const DanhMucKim = () => {
                   filter
                   id="NGUOI_TAO"
                   className="w-full"
-                  placeholder="Nhập người tạo"
+                  placeholder="Chọn người tạo"
                   onChange={(e) => {
                     console.log(e.value);
                     setOptions({ ...options, nguoiTao: e.value });
@@ -137,7 +134,7 @@ const DanhMucKim = () => {
                   optionValue="id"
                   options={users}
                   optionLabel="hO_TEN"
-                  type="text"
+                  showClear
                   value={options.nguoiTao}
                 />
               </div>
@@ -157,6 +154,7 @@ const DanhMucKim = () => {
                   id="TRANG_THAI"
                   className="w-full"
                   options={arrTrangThai}
+                  showClear
                   placeholder="Chọn trạng thái"
                   value={options.trangThai}
                 />
@@ -174,7 +172,6 @@ const DanhMucKim = () => {
           </Panel>
 
           <TableDM_DanhMucKim
-            donvi={donViQuanLy}
             setVisible={setVisible}
             setIsUpdate={setIsUpdate}
             setDanhMucKim={setDanhMucKim}

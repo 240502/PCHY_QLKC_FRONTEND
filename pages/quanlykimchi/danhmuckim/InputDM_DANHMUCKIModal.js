@@ -27,14 +27,14 @@ export const InputDM_DANHMUCKIMModal = ({
     { label: "Kìm 3 pha", value: 3 },
   ];
   const arrTrangThai = [
-    { label: "Có hiệu lực", value: 1 },
-    { label: "Hết hiệu lực", value: 0 },
+    { label: "Có hiệu lực", value: 0 },
+    { label: "Hết hiệu lực", value: 1 },
   ];
 
   useEffect(() => {
     if (isUpdate) {
       setDanhMucKim(danhmuckim);
-      setTrangThai(danhmuckim.trang_thai);
+      // setTrangThai(danhmuckim.trang_thai);
     } else {
       setDanhMucKim(QLKC_D_KIM);
     }
@@ -71,11 +71,6 @@ export const InputDM_DANHMUCKIMModal = ({
       const userLocal = JSON.parse(sessionStorage.getItem("user"));
 
       if (handleValidate()) {
-        console.log("new d_kim", {
-          ...danhMucKim,
-          ma_dviqly: currentMA_DVIQLY,
-          nguoi_tao: userLocal.id,
-        });
         const result = await D_KIMService.insert_D_KIM({
           ...danhMucKim,
           id_kim: 0,
@@ -92,13 +87,21 @@ export const InputDM_DANHMUCKIMModal = ({
         loadData();
       }
     } catch (err) {
-      console.error(err);
-      toast.current.show({
-        severity: "error",
-        summary: "Thông báo",
-        detail: "Thêm danh mục kim không thành công",
-        life: 3000,
-      });
+      if (err?.response?.data?.message) {
+        toast.current.show({
+          severity: "error",
+          summary: "Thông báo",
+          detail: err.response.data.message,
+          life: 3000,
+        });
+      } else {
+        toast.current.show({
+          severity: "error",
+          summary: "Thông báo",
+          detail: "Thêm danh mục kim không thành công",
+          life: 3000,
+        });
+      }
     }
   };
 
@@ -120,13 +123,21 @@ export const InputDM_DANHMUCKIMModal = ({
         loadData();
       }
     } catch (err) {
-      console.error(err);
-      toast.current.show({
-        severity: "error",
-        summary: "Thông báo",
-        detail: "Cập nhật danh mục kim không thành công",
-        life: 3000,
-      });
+      if (err?.response?.data?.message) {
+        toast.current.show({
+          severity: "error",
+          summary: "Thông báo",
+          detail: err.response.data.message,
+          life: 3000,
+        });
+      } else {
+        toast.current.show({
+          severity: "error",
+          summary: "Thông báo",
+          detail: "Cập nhật danh mục kim không thành công",
+          life: 3000,
+        });
+      }
     }
   };
 
@@ -191,6 +202,26 @@ export const InputDM_DANHMUCKIMModal = ({
             )}
           </div>
         </div>
+        {isUpdate && (
+          <div className="flex gap-4 mt-4">
+            <div className="flex flex-column flex-1">
+              <label htmlFor="LOAI_MA_KIM" className="mb-2">
+                Trạng thái
+              </label>
+              <Dropdown
+                onChange={(e) => {
+                  setDanhMucKim({ ...danhMucKim, trang_thai: e.value });
+                }}
+                optionLabel="label"
+                id="TRANG_THAI"
+                className="w-full"
+                options={arrTrangThai}
+                placeholder="Chọn trạng thái"
+                value={danhMucKim.trang_thai}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-content-center gap-4 mt-4">
           <Button
