@@ -13,13 +13,11 @@ import { Button } from "primereact/button";
 import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
 
 import {
-  update_QLKC_BBAN_BANGIAO_KIMKyC1,
-  update_QLKC_BBAN_BANGIAO_KIMKyC2,
-  get_BBAN_ById,
-} from "../../../services/quanlykimchi/BBAN_GIAO_KIMService";
-import { QLKC_BBAN_BANGIAO_KIM } from "../../../models/QLKC_BBAN_BANGIAO_KIM";
+  update_kyC1_PM_C3_GIAONHAN_TEMCHI,
+  update_kyC2_PM_C3_GIAONHAN_TEMCHI,
+} from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
 const BienBanViewer = ({
-  bienBan,
+  giaoNhanTemChi,
   visible,
   handleCloseModalViewer,
   showToast,
@@ -43,7 +41,7 @@ const BienBanViewer = ({
   );
   const signC1 = async (id) => {
     try {
-      const res = await update_QLKC_BBAN_BANGIAO_KIMKyC1(id);
+      const res = await update_kyC1_PM_C3_GIAONHAN_TEMCHI(giaoNhanTemChi.id);
       showToast("success", "Ký thành công!");
       // getBienBanById(id);
       loadData();
@@ -56,7 +54,7 @@ const BienBanViewer = ({
 
   const signC2 = async (id) => {
     try {
-      const res = await update_QLKC_BBAN_BANGIAO_KIMKyC2(id);
+      const res = await update_kyC2_PM_C3_GIAONHAN_TEMCHI(giaoNhanTemChi.id);
       console.log(res);
       showToast("success", "Ký thành công!");
       // getBienBanById(id);
@@ -67,12 +65,12 @@ const BienBanViewer = ({
       console.log(err.message);
     }
   };
+
   useEffect(() => {
     const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
       try {
-        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(
-          bienBan.don_vi_nhan
-        );
+        const data = { ma_dviqly: giaoNhanTemChi.don_vi_nhan };
+        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(data);
         setUsers(res);
       } catch (e) {
         console.log(e);
@@ -83,55 +81,53 @@ const BienBanViewer = ({
   }, []);
 
   useEffect(() => {
+    console.log("giaoNhanTemChi", giaoNhanTemChi.ngay_giao);
     setEvents((prv) =>
       prv.map((e) => {
         if (
           e.status === "Ký cấp 2" &&
-          (bienBan?.trang_thai === 1 || bienBan?.trang_thai === 2)
+          (giaoNhanTemChi?.trang_thai === 1 || giaoNhanTemChi?.trang_thai === 2)
         ) {
           return {
             ...e,
-            user: bienBan?.ten_nguoi_nhan,
-
-            date: bienBan?.ngay_nhan,
+            user: giaoNhanTemChi?.ten_nguoi_nhan,
+            date: giaoNhanTemChi?.ngay_nhan,
           };
         }
-        if (e.status === "Ký cấp 2" && bienBan?.trang_thai === 0) {
+        if (e.status === "Ký cấp 2" && giaoNhanTemChi?.trang_thai === 0) {
           return {
             ...e,
-            user: bienBan?.ten_nguoi_nhan,
+            user: giaoNhanTemChi?.ten_nguoi_nhan,
           };
         }
 
         if (
           e.status === "Ký cấp 1" &&
-          (bienBan?.trang_thai === 1 || bienBan?.trang_thai === 2)
+          (giaoNhanTemChi?.trang_thai === 1 || giaoNhanTemChi?.trang_thai === 2)
         ) {
           return {
             ...e,
-            user: bienBan?.ten_nguoi_giao,
-
-            date: bienBan?.ngay_giao,
+            user: giaoNhanTemChi?.ten_nguoi_giao,
+            date: giaoNhanTemChi?.ngay_giao,
           };
         } else {
           return {
             ...e,
-            user: bienBan?.ten_nguoi_giao,
+            user: giaoNhanTemChi?.ten_nguoi_giao,
           };
         }
       })
     );
     console.log(
-      "bien ban",
-      bienBan.trang_thai === 0 && current_MADVIQLY === "PA23"
+      "giao nhan",
+      giaoNhanTemChi.trang_thai === 0 && current_MADVIQLY === "PA23"
     );
-  }, [bienBan]);
-
+  }, [giaoNhanTemChi]);
   const update_NguoiNhan = async (userId) => {
     try {
       const data = {
         ht_nguoidung_id: userId,
-        bienban_id: bienBan.id_bienban,
+        bienban_id: giaoNhanTemChi.id_bienban,
       };
       const res = await updateNguoiNhan(data);
       loadData();
@@ -160,6 +156,9 @@ const BienBanViewer = ({
   };
 
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
+
+  console.log(giaoNhanTemChi.ten_nguoi_nhan);
+
   return (
     <Dialog
       style={{ width: "80%" }}
@@ -185,7 +184,7 @@ const BienBanViewer = ({
               <>Đơn vị giao:</>{" "}
             </label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.don_vi_giao.toUpperCase()}</strong>{" "}
+              <strong>{giaoNhanTemChi.ten_pb.toUpperCase()}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
@@ -193,7 +192,7 @@ const BienBanViewer = ({
               <>Đơn vị nhận:</>{" "}
             </label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.don_vi_nhan.toUpperCase()}</strong>{" "}
+              <strong>{giaoNhanTemChi.ten_dv.toUpperCase()}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
@@ -201,20 +200,21 @@ const BienBanViewer = ({
               <>Người giao:</>{" "}
             </label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.nguoi_giao}</strong>{" "}
+              <strong>{giaoNhanTemChi.ten_nguoi_giao}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
             <label style={{ width: "25%" }}>Người nhận:</label>
-            <label style={{ width: "75%" }}>
+            {/* <label style={{ width: "75%" }}>
               <Dropdown
-                value={bienBan?.nguoi_nhan}
+                value={giaoNhanTemChi?.nguoi_nhan}
                 className="w-full"
                 options={users}
                 placeholder="Chọn"
                 filter
+                required
                 disabled={
-                  bienBan?.trang_thai !== 0 || current_MADVIQLY !== "PA23"
+                  giaoNhanTemChi?.trang_thai !== 0 || current_MADVIQLY !== "PA23"
                     ? true
                     : false
                 }
@@ -224,19 +224,22 @@ const BienBanViewer = ({
                   const user = users.find((u) => u.id === e.value);
                   console.log("user", user);
                   setBienBan({
-                    ...bienBan,
+                    ...giaoNhanTemChi,
                     nguoi_nhan: e.value,
                     ten_nguoi_nhan: user.hO_TEN,
                   });
                   update_NguoiNhan(e.value);
                 }}
               />
+            </label> */}
+            <label style={{ width: "75%" }}>
+              <strong>{giaoNhanTemChi.ten_nguoi_nhan}</strong>{" "}
             </label>
           </div>
           <div className="flex justify-content-between align-items-center mb-3">
             <label style={{ width: "25%" }}>Số lượng:</label>
             <label style={{ width: "75%" }}>
-              <strong>{bienBan.soluong}</strong>{" "}
+              <strong>{giaoNhanTemChi.soluong}</strong>{" "}
             </label>
           </div>
 
@@ -253,11 +256,9 @@ const BienBanViewer = ({
                     <br></br>
                     <small className="text-color-secondary">
                       {item.date
-                        ? `${new Date(item.date).getDate()}-${new Date(
-                            item.date
-                          ).getMonth()}-${new Date(
-                            item.date
-                          ).getFullYear()} ${new Date(
+                        ? `${new Date(item.date).getDate()}-${
+                            new Date(item.date).getMonth() + 1
+                          }-${new Date(item.date).getFullYear()} ${new Date(
                             item.date
                           ).getHours()}:${new Date(
                             item.date
@@ -272,18 +273,25 @@ const BienBanViewer = ({
         </div>
       </div>
       <div className="flex justify-content-end" style={{ marginTop: "20px" }}>
-        {((bienBan.trang_thai === 0 && current_MADVIQLY === "PA23") ||
-          (bienBan.trang_thai === 1 && current_MADVIQLY !== "PA23")) && (
+        {((giaoNhanTemChi.trang_thai === 0 && current_MADVIQLY === "PA23") ||
+          (giaoNhanTemChi.trang_thai === 1 && current_MADVIQLY !== "PA23")) && (
           <Button
             label="Ký số"
             severity="success"
             className="me-3"
             style={{ marginRight: "10px" }}
             onClick={() => {
-              if (bienBan.trang_thai === 0 && current_MADVIQLY == "PA23") {
-                signC1(bienBan.id_bienban);
+              if (giaoNhanTemChi.nguoi_nhan) {
+                if (
+                  giaoNhanTemChi.trang_thai === 0 &&
+                  current_MADVIQLY == "PA23"
+                ) {
+                  signC1(giaoNhanTemChi.id_bienban);
+                } else {
+                  signC2(giaoNhanTemChi.id_bienban);
+                }
               } else {
-                signC2(bienBan.id_bienban);
+                showToast("error", "Vui lòng chọn người nhận!");
               }
             }}
           />
