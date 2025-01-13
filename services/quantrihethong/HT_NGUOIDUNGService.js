@@ -6,9 +6,9 @@ export const login_HT_NGUOIDUNG = async (data) => {
 };
 
 export const HT_NGUOIDUNG_Service = {
-  async getHT_NGUOIDUNGByMADVIQLY(ma_dviqly) {
-    const res = await apiClient.get(
-      "/HT_NGUOIDUNG/getHT_NGUOIDUNGByMA_DVIQLY?ma_dviqly=" + ma_dviqly
+  async getHT_NGUOIDUNGByMADVIQLY(data) {
+    const res = await apiClient.post(
+      "/HT_NGUOIDUNG/getHT_NGUOIDUNGByMA_DVIQLY",data
     );
     return res.data;
   },
