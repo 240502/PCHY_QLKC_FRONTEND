@@ -19,6 +19,10 @@ export const D_KIMService = {
     );
     return res?.data;
   },
+  async insert_D_KIM(data) {
+    const res = await apiClient.post("/D_KIM/insert_D_KIM", data);
+    return res;
+  },
 
   async get_ALL_D_KIMTTByMA_DVIQLY(requestData) {
     const res = await apiClient.post(
@@ -26,6 +30,12 @@ export const D_KIMService = {
       requestData
     );
 
+    return res?.data;
+  },
+  async getD_KimByMA_DVIQLY(ma_dviqly) {
+    const res = await apiClient.get(
+      "/D_KIM/get-by-ma-dviqly?ma_dviqly=" + ma_dviqly
+    );
     return res?.data;
   },
   async getD_KimInTable() {
@@ -44,8 +54,7 @@ export const update_D_KIM = async (data) => {
 };
 
 export const delete_D_KIM = async (id) => {
-  console.log(id);
-  const res = await apiClient.delete("/D_KIM/delete_D_KIM?ID=" + id);
+  const res = await apiClient.delete("/D_KIM/delete_D_KIM?id_kim=" + id);
   return res;
 };
 

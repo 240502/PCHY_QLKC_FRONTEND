@@ -3,16 +3,16 @@ import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { QLKC_D_KIM } from "../../../models/QLKC_D_KIM";
-import { getAllD_DVIQLY } from "../../../services/quantrihethong/DM_DVIQLYService";
 import { Button } from "primereact/button";
 
-import { get_All_DM_DONVI } from "../../../services/quantrihethong/DM_DONVIService";
 import {
+  D_KIMService,
   insert_D_KIM,
   update_D_KIM,
 } from "../../../services/quanlykimchi/D_KIMService";
 
 export const InputDM_DANHMUCKIMModal = ({
+  currentMA_DVIQLY,
   isUpdate,
   danhmuckim,
   visible,
@@ -21,30 +21,20 @@ export const InputDM_DANHMUCKIMModal = ({
   loadData,
 }) => {
   const [danhMucKim, setDanhMucKim] = useState(QLKC_D_KIM);
-  const [donViQuanLy, setDonViQuanLy] = useState([]);
-  const [dsDonViQuanLy, setDSDonViQuanLy] = useState([]);
-  const [trangThai, setTrangThai] = useState();
   const [errors, setErrors] = useState({});
-
-  const arrTrangThai = [
-    { label: "Có hiệu lực", value: 1 },
-    { label: "Hết hiệu lực", value: 0 },
+  const arrMaKim = [
+    { label: "Kìm 1 pha", value: 1 },
+    { label: "Kìm 3 pha", value: 3 },
   ];
-
-  useEffect(() => {
-    let dvi =
-      dsDonViQuanLy.find((d) => d.id === danhMucKim.dm_donvi_id) || null;
-    setDanhMucKim({
-      ...danhMucKim,
-      ma_dviqly: dvi?.ma_dviqly,
-      ten_dviqly: dvi?.ten,
-    });
-  }, [danhMucKim.dm_donvi_id]);
+  const arrTrangThai = [
+    { label: "Có hiệu lực", value: 0 },
+    { label: "Hết hiệu lực", value: 1 },
+  ];
 
   useEffect(() => {
     if (isUpdate) {
       setDanhMucKim(danhmuckim);
-      setTrangThai(danhmuckim.trang_thai);
+      // setTrangThai(danhmuckim.trang_thai);
     } else {
       setDanhMucKim(QLKC_D_KIM);
     }
@@ -77,12 +67,15 @@ export const InputDM_DANHMUCKIMModal = ({
   };
 
   const Create = async () => {
-    console.log(danhMucKim);
     try {
+      const userLocal = JSON.parse(sessionStorage.getItem("user"));
+
       if (handleValidate()) {
-        const result = await insert_D_KIM({
+        const result = await D_KIMService.insert_D_KIM({
           ...danhMucKim,
-          nguoi_tao: danhMucKim.nguoi_tao,
+          id_kim: 0,
+          ma_dviqly: currentMA_DVIQLY,
+          nguoi_tao: userLocal.id,
         });
         toast.current.show({
           severity: "success",
@@ -94,13 +87,21 @@ export const InputDM_DANHMUCKIMModal = ({
         loadData();
       }
     } catch (err) {
-      console.error(err);
-      toast.current.show({
-        severity: "error",
-        summary: "Thông báo",
-        detail: "Thêm danh mục kim không thành công",
-        life: 3000,
-      });
+      if (err?.response?.data?.message) {
+        toast.current.show({
+          severity: "error",
+          summary: "Thông báo",
+          detail: err.response.data.message,
+          life: 3000,
+        });
+      } else {
+        toast.current.show({
+          severity: "error",
+          summary: "Thông báo",
+          detail: "Thêm danh mục kim không thành công",
+          life: 3000,
+        });
+      }
     }
   };
 
@@ -122,13 +123,21 @@ export const InputDM_DANHMUCKIMModal = ({
         loadData();
       }
     } catch (err) {
-      console.error(err);
-      toast.current.show({
-        severity: "error",
-        summary: "Thông báo",
-        detail: "Cập nhật danh mục kim không thành công",
-        life: 3000,
-      });
+      if (err?.response?.data?.message) {
+        toast.current.show({
+          severity: "error",
+          summary: "Thông báo",
+          detail: err.response.data.message,
+          life: 3000,
+        });
+      } else {
+        toast.current.show({
+          severity: "error",
+          summary: "Thông báo",
+          detail: "Cập nhật danh mục kim không thành công",
+          life: 3000,
+        });
+      }
     }
   };
 
@@ -147,90 +156,28 @@ export const InputDM_DANHMUCKIMModal = ({
         <div className="flex gap-4 mt-4">
           <div className="flex flex-column flex-1">
             <label htmlFor="LOAI_MA_KIM" className="mb-2">
-              Loại mã kim
+              Loại má kim
             </label>
-            <InputText
-              id="LOAI_MA_KIM"
-              className="w-full"
-              placeholder="Nhập loại mã kim..."
+            <Dropdown
               onChange={(e) => {
-                setDanhMucKim({ ...danhMucKim, loai_ma_kim: e.target.value });
+                setDanhMucKim({ ...danhMucKim, loai_ma_kim: e.value });
               }}
+              optionLabel="label"
+              id="TRANG_THAI"
+              className="w-full"
+              options={arrMaKim}
+              placeholder="Chọn má kìm"
               onFocus={() => {
                 if (errors.loai_ma_kim) {
                   setErrors({});
                 }
               }}
-              type="text"
               value={danhMucKim.loai_ma_kim}
             />
             {errors.loai_ma_kim && (
               <small className="p-error">{errors.loai_ma_kim}</small>
             )}
           </div>
-
-          <div className="flex flex-column flex-1">
-            <label htmlFor="MA_DVIQLY" className="mb-2">
-              Mã đơn vị quản lý
-            </label>
-            <InputText
-              id="MA_DVIQLY"
-              className="w-full"
-              placeholder="Nhập mã đơn vị quản lý..."
-              onChange={(e) => {
-                setDanhMucKim({ ...danhMucKim, ma_dviqly: e.target.value });
-              }}
-              type="text"
-              value={danhMucKim.ma_dviqly}
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-4 mt-4">
-          <div className="flex flex-column flex-1">
-            <label htmlFor="TRANG_THAI" className="mb-2">
-              Trạng thái
-            </label>
-            <Dropdown
-              onChange={(e) => {
-                setTrangThai(e.value);
-                setDanhMucKim({ ...danhMucKim, trang_thai: e.value });
-              }}
-              optionLabel="label"
-              id="TRANG_THAI"
-              className="w-full"
-              options={arrTrangThai}
-              placeholder="Chọn một trạng thái"
-              value={trangThai}
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-4 mt-4">
-          <div className="flex flex-column flex-1">
-            <label htmlFor="NGUOI_TAO" className="mb-2">
-              Người tạo
-            </label>
-            <InputText
-              id="NGUOI_TAO"
-              className="w-full"
-              placeholder="Nhập người tạo..."
-              onChange={(e) => {
-                setDanhMucKim({ ...danhMucKim, nguoi_tao: e.target.value });
-              }}
-              onFocus={() => {
-                if (errors.nguoi_tao) {
-                  setErrors({});
-                }
-              }}
-              type="text"
-              value={danhMucKim.nguoi_tao}
-            />
-            {errors.nguoi_tao && (
-              <small className="p-error">{errors.nguoi_tao}</small>
-            )}
-          </div>
-
           <div className="flex flex-column flex-1">
             <label htmlFor="MA_HIEU" className="mb-2">
               Mã hiệu
@@ -255,6 +202,26 @@ export const InputDM_DANHMUCKIMModal = ({
             )}
           </div>
         </div>
+        {isUpdate && (
+          <div className="flex gap-4 mt-4">
+            <div className="flex flex-column flex-1">
+              <label htmlFor="LOAI_MA_KIM" className="mb-2">
+                Trạng thái
+              </label>
+              <Dropdown
+                onChange={(e) => {
+                  setDanhMucKim({ ...danhMucKim, trang_thai: e.value });
+                }}
+                optionLabel="label"
+                id="TRANG_THAI"
+                className="w-full"
+                options={arrTrangThai}
+                placeholder="Chọn trạng thái"
+                value={danhMucKim.trang_thai}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-content-center gap-4 mt-4">
           <Button

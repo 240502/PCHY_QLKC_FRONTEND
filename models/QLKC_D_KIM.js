@@ -8,5 +8,7 @@ export const QLKC_D_KIM = {
   ma_dviqly: null,
   ngay_tao: null,
   nguoi_sua: null,
-  ngay_sua: null
+  ngay_sua: null,
+  ten_dviqly: null,
+  ten_nguoitao: null,
 };

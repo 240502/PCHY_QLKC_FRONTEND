@@ -70,9 +70,8 @@ const BienBanViewer = ({
   useEffect(() => {
     const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
       try {
-        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(
-          bienBan.don_vi_nhan
-        );
+        const data = { ma_dviqly: bienBan.don_vi_nhan };
+        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(data);
         setUsers(res);
       } catch (e) {
         console.log(e);

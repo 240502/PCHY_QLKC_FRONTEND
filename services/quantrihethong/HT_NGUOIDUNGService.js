@@ -8,7 +8,8 @@ export const login_HT_NGUOIDUNG = async (data) => {
 export const HT_NGUOIDUNG_Service = {
   async getHT_NGUOIDUNGByMADVIQLY(data) {
     const res = await apiClient.post(
-      "/HT_NGUOIDUNG/getHT_NGUOIDUNGByMA_DVIQLY",data
+      "/HT_NGUOIDUNG/getHT_NGUOIDUNGByMA_DVIQLY",
+      data
     );
     return res.data;
   },

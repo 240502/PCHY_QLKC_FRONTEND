@@ -7,25 +7,24 @@ import { InputDM_DANHMUCKIMModal } from "./InputDM_DANHMUCKIModal";
 import { Dropdown } from "primereact/dropdown";
 import { Divider } from "primereact/divider";
 import { Panel } from "primereact/panel";
+import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOIDUNGService";
 
 import { QLKC_D_KIM } from "../../../models/QLKC_D_KIM";
-// import { getAll_D_KIM, search_D_KIM } from "../../../services/quanlykimchi/QLKC_D_KIMService";
 import { D_KIMService } from "../../../services/quanlykimchi/D_KIMService";
 import { get_All_DM_DONVI } from "../../../services/quantrihethong/DM_DONVIService";
-import { getAll_D_KIM } from "../../../services/quanlykimchi/D_KIMService";
+import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
 
 const DanhMucKim = () => {
+  const currentMenu = sessionStorage.getItem("currentMenu");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [pageCount, setPageCount] = useState(0);
 
   const [options, setOptions] = useState({
-    loai_ma_kim: "",
-    nguoi_tao: "",
-    trang_thai: {
-      label: "",
-      value: "",
-    },
+    loaiMaKim: "",
+    nguoiTao: "",
+    trangThai: "",
+    maDviqly: "",
   });
 
   const [arrDanhMucKim, setArrDanhMucKim] = useState([]);
@@ -34,16 +33,18 @@ const DanhMucKim = () => {
   const [visible, setVisible] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const toast = useRef(null);
-
+  const currentMA_DVIQLY = JSON.parse(
+    sessionStorage.getItem("current_MADVIQLY")
+  );
   const arrTrangThai = [
-    { label: "Có hiệu lực", value: 1 },
-    { label: "Hết hiệu lực", value: 0 },
+    { label: "Có hiệu lực", value: 0 },
+    { label: "Hết hiệu lực", value: 1 },
   ];
+  const [users, setUsers] = useState([HT_NGUOIDUNG]);
 
   useEffect(() => {
     const getDSDonViQuanLy = async () => {
       const results = await get_All_DM_DONVI();
-      console.log(results);
       setDonViQuanLy(results);
     };
     getDSDonViQuanLy();
@@ -51,32 +52,17 @@ const DanhMucKim = () => {
 
   const loadData = async () => {
     try {
-      const items = await getAll_D_KIM();
-      setArrDanhMucKim(items);
-      console.log(items);
-      setPageCount(Math.ceil(items.totalRecord / pageSize));
-    } catch (err) {
-      console.log(err);
-      setArrDanhMucKim([]);
-      setPageCount(0);
-    }
-  };
-
-  const handleSearch = async () => {
-    try {
       const data = {
-        page: page,
+        pageIndex: page,
+        nguoiTao: options.nguoiTao,
         pageSize: pageSize,
-        loai_ma_kim: options.loai_ma_kim,
-        nguoi_tao: options.nguoi_tao,
-        trang_thai: options.trang_thai.value,
+        maDviqly: options.maDviqly !== "" ? options.maDviqly : currentMA_DVIQLY,
+        loaiMaKim: options.loaiMaKim,
+        trangThai: options.trangThai,
       };
-
-      const items = await D_KIMService.search_D_KIM(data);
-      console.log(items);
-      setArrDanhMucKim(items.data);
-      setPageCount(Math.ceil(items.totalItems / pageSize));
-      console.log(data);
+      const res = await D_KIMService.search_D_KIM(data);
+      setArrDanhMucKim(res.data);
+      setPageCount(Math.ceil(res.totalItems / pageSize));
     } catch (err) {
       console.log(err);
       setArrDanhMucKim([]);
@@ -85,50 +71,71 @@ const DanhMucKim = () => {
   };
 
   const onClinkSearchBtn = (e) => {
-    handleSearch();
-  };
-
-  useEffect(() => {
     loadData();
-  }, [page, pageSize]);
+  };
+  useEffect(() => {
+    const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
+      try {
+        const data = { ma_dviqly: currentMA_DVIQLY, db_maphongban: "P6" };
+        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(data);
+        setUsers(res);
+      } catch (e) {
+        console.log(e);
+      }
+    };
 
+    getHT_NGUOIDUNGByMA_DVIQLY();
+  }, []);
+  useEffect(() => {
+    console.log("page size", pageSize);
+    loadData();
+  }, [page, pageSize, options.loaiMaKim]);
   return (
     <div className="grid">
       <div className="col-12">
         <div className="card">
-          <Panel header="Tìm kiếm" className="mb-4">
+          <Panel header={currentMenu} className="mb-4">
             <Divider style={{ marginTop: "0", marginBottom: "10px" }} />
 
             <div className="flex flex-row gap-3">
               <div className="flex-1">
-                <label htmlFor="LOAI_MA_KIM" className="mb-2 block">
-                  Loại mã kim
+                <label htmlFor="MA" className="mb-2 block">
+                  Đơn vị quản lý
                 </label>
-                <InputText
-                  id="LOAI_MA_KIM"
-                  className="w-full"
-                  placeholder="Nhập loại mã kim"
+                <Dropdown
+                  value={options.maDviqly}
+                  options={donViQuanLy}
+                  filter
                   onChange={(e) => {
-                    setOptions({ ...options, loai_ma_kim: e.target.value });
+                    console.log(e.value);
+                    setOptions({ ...options, maDviqly: e.value ?? "" });
                   }}
-                  type="text"
-                  value={options.loai_ma_kim}
+                  optionLabel="ten"
+                  id="donViNhan"
+                  optionValue="ma_dviqly"
+                  placeholder="Chọn đơn vị"
+                  className="w-full"
+                  showClear
                 />
               </div>
-
               <div className="flex-1">
                 <label htmlFor="NGUOI_TAO" className="mb-2 block">
                   Người tạo
                 </label>
-                <InputText
+                <Dropdown
+                  filter
                   id="NGUOI_TAO"
                   className="w-full"
-                  placeholder="Nhập người tạo"
+                  placeholder="Chọn người tạo"
                   onChange={(e) => {
-                    setOptions({ ...options, nguoi_tao: e.target.value });
+                    console.log(e.value);
+                    setOptions({ ...options, nguoiTao: e.value });
                   }}
-                  type="text"
-                  value={options.nguoi_tao}
+                  optionValue="id"
+                  options={users}
+                  optionLabel="hO_TEN"
+                  showClear
+                  value={options.nguoiTao}
                 />
               </div>
 
@@ -140,17 +147,16 @@ const DanhMucKim = () => {
                   onChange={(e) => {
                     setOptions({
                       ...options,
-                      trang_thai: arrTrangThai.find(
-                        (tt) => tt.value === e.value
-                      ),
+                      trangThai: e.value,
                     });
                   }}
                   optionLabel="label"
                   id="TRANG_THAI"
                   className="w-full"
                   options={arrTrangThai}
+                  showClear
                   placeholder="Chọn trạng thái"
-                  value={options.trang_thai.value}
+                  value={options.trangThai}
                 />
               </div>
             </div>
@@ -166,7 +172,6 @@ const DanhMucKim = () => {
           </Panel>
 
           <TableDM_DanhMucKim
-            donvi={donViQuanLy}
             setVisible={setVisible}
             setIsUpdate={setIsUpdate}
             setDanhMucKim={setDanhMucKim}
@@ -178,10 +183,13 @@ const DanhMucKim = () => {
             pageSize={pageSize}
             loadData={loadData}
             toast={toast}
+            setOptions={setOptions}
+            options={options}
           />
 
           {visible && (
             <InputDM_DANHMUCKIMModal
+              currentMA_DVIQLY={currentMA_DVIQLY}
               danhmuckim={danhMucKim}
               isUpdate={isUpdate}
               visible={visible}

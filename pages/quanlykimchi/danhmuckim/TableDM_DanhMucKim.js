@@ -10,7 +10,7 @@ import { Toast } from "primereact/toast";
 import { Dropdown } from "primereact/dropdown";
 import { FilterMatchMode, PrimeIcons } from "primereact/api";
 import { InputText } from "primereact/inputtext";
-import { delete_QLKC_D_KIM } from "../../../services/quanlykimchi/D_KIMService";
+import { delete_D_KIM } from "../../../services/quanlykimchi/D_KIMService";
 const TableDM_DanhMucKim = ({
   setVisible,
   setIsUpdate,
@@ -23,7 +23,14 @@ const TableDM_DanhMucKim = ({
   pageSize,
   loadData,
   toast,
+  setOptions,
+  options,
 }) => {
+  const arrMaKim = [
+    { label: "Tất cả", value: "" },
+    { label: "Kìm 1 pha", value: 1 },
+    { label: "Kìm 3 pha", value: 3 },
+  ];
   const rowsPerPageOptions = [5, 10, 25];
   const [isHide, setIsHide] = useState(false);
   const [id, setId] = useState();
@@ -40,10 +47,12 @@ const TableDM_DanhMucKim = ({
 
   const confirm = async () => {
     setIsHide(false);
+
     try {
       if (isMultiDelete) {
+        console.log("selected records", selectedRecords);
         await Promise.all(
-          selectedRecords.map((record) => delete_QLKC_D_KIM(record.id))
+          selectedRecords.map((record) => delete_D_KIM(record.id_kim))
         );
         toast.current.show({
           severity: "success",
@@ -51,8 +60,9 @@ const TableDM_DanhMucKim = ({
           detail: "Xóa các bản ghi thành công",
           life: 3000,
         });
+        setSelectedRecords([]);
       } else {
-        await delete_QLKC_D_KIM(id);
+        await delete_D_KIM(id);
         toast.current.show({
           severity: "success",
           summary: "Thông báo",
@@ -60,6 +70,7 @@ const TableDM_DanhMucKim = ({
           life: 3000,
         });
       }
+      console.log("load data after deleted");
       loadData();
     } catch (err) {
       console.log(err);
@@ -88,7 +99,6 @@ const TableDM_DanhMucKim = ({
             setVisible(true);
             setIsUpdate(true);
             setDanhMucKim(rowData);
-            console.log(rowData);
           }}
         />
         <Button
@@ -100,7 +110,7 @@ const TableDM_DanhMucKim = ({
           }}
           onClick={() => {
             setIsHide(true);
-            setId(rowData.id);
+            setId(rowData.id_kim);
             setIsMultiDelete(false);
           }}
         />
@@ -113,6 +123,7 @@ const TableDM_DanhMucKim = ({
     return (
       <div className={className}>
         <span className="text-xl font-bold">Danh sách</span>
+
         <div className="flex flex-column sm:flex-row gap-3">
           {selectedRecords.length > 0 && (
             <Button
@@ -149,7 +160,22 @@ const TableDM_DanhMucKim = ({
   return (
     <>
       <Panel headerTemplate={headerTemplate}>
-        <div className="flex justify-content-end mb-3">
+        <div className="flex justify-content-between mb-3">
+          <div>
+            <Dropdown
+              onChange={(e) => {
+                setOptions((prev) => {
+                  return { ...prev, loaiMaKim: e.value };
+                });
+              }}
+              optionLabel="label"
+              id="TRANG_THAI"
+              className="w-full"
+              options={arrMaKim}
+              placeholder="Chọn má kìm"
+              value={options.loaiMaKim}
+            />
+          </div>
           <span className="p-input-icon-left w-full md:w-auto">
             <i className="pi pi-search" />
             <InputText
@@ -160,6 +186,7 @@ const TableDM_DanhMucKim = ({
             />
           </span>
         </div>
+
         <DataTable
           value={data}
           showGridlines
@@ -183,25 +210,32 @@ const TableDM_DanhMucKim = ({
               color: "#fff",
             }}
           ></Column>
-
           <Column
             {...propSortAndFilter}
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="id_kim"
-            header="ID Kim"
+            field="ten_dviqly"
+            header="Đơn vị quản lý"
             className="min-w-8rem"
           ></Column>
-
+          <Column
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ma_hieu"
+            header="Mã hiệu"
+            className="min-w-8rem"
+          ></Column>
           <Column
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
             field="loai_ma_kim"
-            header="Loại mã kim"
+            header="Loại má kim"
             className="min-w-10rem"
+            body={(rowData) => {
+              return rowData.loai_ma_kim === 1 ? "Kìm 1 pha" : "Kìm 3 pha";
+            }}
           ></Column>
 
           <Column
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="nguoi_tao"
+            field="ten_nguoitao"
             header="Người tạo"
             className="min-w-8rem"
           ></Column>
@@ -211,23 +245,8 @@ const TableDM_DanhMucKim = ({
             field="trang_thai"
             header="Trạng thái"
             body={(rowData) => {
-              return rowData.trang_thai === 1 ? "Có hiệu lực" : "Hết hiệu lực";
+              return rowData.trang_thai === 0 ? "Có hiệu lực" : "Hết hiệu lực";
             }}
-            className="min-w-8rem"
-          ></Column>
-
-          <Column
-            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="ma_hieu"
-            header="Mã hiệu"
-            className="min-w-8rem"
-          ></Column>
-
-          <Column
-            {...propSortAndFilter}
-            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="ma_dviqly"
-            header="Mã ĐVQL"
             className="min-w-8rem"
           ></Column>
 
@@ -239,7 +258,7 @@ const TableDM_DanhMucKim = ({
           ></Column>
         </DataTable>
 
-        <div className="flex flex-column md:flex-row justify-content-between align-items-center gap-3 mt-4">
+        <div className="flex flex-column md:flex-row justify-content-center align-items-center gap-3 mt-4">
           <div className="flex align-items-center">
             <Button
               outlined

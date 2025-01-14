@@ -8,27 +8,30 @@ import { propSortAndFilter } from "../../../constants/propGlobal";
 import { Panel } from "primereact/panel";
 import { Toast } from "primereact/toast";
 import { Dropdown } from "primereact/dropdown";
-import { delete_QLKC_C3_GIAONHAN_TEMCHI, 
-         update_kyC1_PM_C3_GIAONHAN_TEMCHI, 
-         update_kyC2_PM_C3_GIAONHAN_TEMCHI, 
-         update_huyPM_C3_GIAONHAN_TEMCHI, 
-         update_loaiBBan_C3_GIAONHAN_TEMCHI} from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
+import {
+  delete_QLKC_C3_GIAONHAN_TEMCHI,
+  update_kyC1_PM_C3_GIAONHAN_TEMCHI,
+  update_kyC2_PM_C3_GIAONHAN_TEMCHI,
+  update_huyPM_C3_GIAONHAN_TEMCHI,
+} from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
 import { FilterMatchMode, PrimeIcons } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 
+import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
+
 export const TableDM_C3 = ({
-    setVisible,
-    setIsUpdate,
-    setGiaoNhanTemChi,
-    data,
-    pageCount,
-    setPage,
-    setPageSize,
-    page,
-    pageSize,
-    loadData,
-    toast,
-    handleOnClickKySoBtn,
+  setVisible,
+  setIsUpdate,
+  setGiaoNhanTemChi,
+  data,
+  pageCount,
+  setPage,
+  setPageSize,
+  page,
+  pageSize,
+  loadData,
+  toast,
+  handleOnClickKySoBtn,
 }) => {
   const rowsPerPageOptions = [5, 10, 25];
   const [isHide, setIsHide] = useState(false);
@@ -40,6 +43,8 @@ export const TableDM_C3 = ({
   const [actionType, setActionType] = useState("");
   const [selectedRecord, setSelectedRecord] = useState(null);
 
+  const [user, setUser] = useState(HT_NGUOIDUNG);
+
   const current_MADVIQLY = JSON.parse(
     sessionStorage.getItem("current_MADVIQLY")
   );
@@ -49,9 +54,11 @@ export const TableDM_C3 = ({
     ten: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     trang_thai: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
   });
-  
+
   const trangThaiBodyTemplate = (rowData) => {
-    if (!rowData || rowData.trang_thai === undefined) { return <span className="text-muted">Không xác định</span>;}
+    if (!rowData || rowData.trang_thai === undefined) {
+      return <span className="text-muted">Không xác định</span>;
+    }
 
     switch (rowData.trang_thai) {
       case 0:
@@ -67,58 +74,58 @@ export const TableDM_C3 = ({
     }
   };
 
-  const LoaiBBChuyenDoi = (rowData) => {
-    if (!rowData || rowData.loai_bban === undefined) {
-      return <span className="text-muted">Không xác định</span>;
-    }
+  // const LoaiBBChuyenDoi = (rowData) => {
+  //   if (!rowData || rowData.loai_bban === undefined) {
+  //     return <span className="text-muted">Không xác định</span>;
+  //   }
 
-    switch (rowData.loai_bban) {
-      case 0:
-        return <span className="text-warning">Mượn kìm</span>;
-      case 1:
-        return <span className="text-info">Trả kìm </span>;
-    }
-  };
+  //   switch (rowData.loai_bban) {
+  //     case 0:
+  //       return <span className="text-warning">Mượn kìm</span>;
+  //     case 1:
+  //       return <span className="text-info">Trả kìm </span>;
+  //   }
+  // };
 
-  const getDonviName = (ma_dviqly) => {
-    // Lấy dữ liệu từ sessionStorage
-    const storedDonvi = JSON.parse(sessionStorage.getItem("ds_donvi"));
+  // const getDonviName = (ma_dviqly) => {
+  //   // Lấy dữ liệu từ sessionStorage
+  //   const storedDonvi = JSON.parse(sessionStorage.getItem("ds_donvi"));
 
-    if (storedDonvi) {
-      const donvi = storedDonvi.find((item) => item.ma_dviqly === ma_dviqly);
-      if (donvi) {
-        return donvi.ten; // Trả về tên đơn vị
-      } else {
-        console.log(`Không tìm thấy đơn vị với mã: ${ma_dviqly}`);
-        return "Không xác định";
-      }
-    } else {
-      console.log("Không tìm thấy dữ liệu đơn vị trong sessionStorage.");
-      return "Không xác định";
-    }
-  };
+  //   if (storedDonvi) {
+  //     const donvi = storedDonvi.find((item) => item.ma_dviqly === ma_dviqly);
+  //     if (donvi) {
+  //       return donvi.ten; // Trả về tên đơn vị
+  //     } else {
+  //       console.log(`Không tìm thấy đơn vị với mã: ${ma_dviqly}`);
+  //       return "Không xác định";
+  //     }
+  //   } else {
+  //     console.log("Không tìm thấy dữ liệu đơn vị trong sessionStorage.");
+  //     return "Không xác định";
+  //   }
+  // };
 
-  const donviGiaoBodyTemplate = (rowData) => {
-    return (
-      <span>
-        {rowData?.don_vi_giao
-          ? getDonviName(rowData.don_vi_giao)
-          : "Không có dữ liệu"}
-      </span>
-    );
-  };
+  // const donviGiaoBodyTemplate = (rowData) => {
+  //   return (
+  //     <span>
+  //       {rowData?.don_vi_giao
+  //         ? getDonviName(rowData.don_vi_giao)
+  //         : "Không có dữ liệu"}
+  //     </span>
+  //   );
+  // };
 
   // Body template cho cột Đơn vị nhận
-  const donviNhanBodyTemplate = (rowData) => {
-    // Kiểm tra rowData và gọi hàm getDonviName
-    return (
-      <span>
-        {rowData?.don_vi_nhan
-          ? getDonviName(rowData.don_vi_nhan)
-          : "Không có dữ liệu"}
-      </span>
-    );
-  };
+  // const donviNhanBodyTemplate = (rowData) => {
+  //   // Kiểm tra rowData và gọi hàm getDonviName
+  //   return (
+  //     <span>
+  //       {rowData?.don_vi_nhan
+  //         ? getDonviName(rowData.don_vi_nhan)
+  //         : "Không có dữ liệu"}
+  //     </span>
+  //   );
+  // };
 
   const confirm = async () => {
     setIsHide(false);
@@ -162,13 +169,19 @@ export const TableDM_C3 = ({
   const cancel = () => {
     setIsHide(false);
   };
-  // console.log("Bộ lọc DataTable:", filters);
 
   const buttonOption = (rowData) => {
     return (
       <div className="flex">
         <Button
-          style={{ marginRight: "10px", backgroundColor: "#1445a7" }}
+          style={{
+            marginRight: "10px",
+            backgroundColor: "#1445a7",
+            padding: "5px",
+            fontSize: "3px",
+            height: "37px",
+            width: "37px",
+          }}
           icon="pi pi-pencil"
           tooltip="Sửa"
           tooltipOptions={{ position: "top" }}
@@ -176,7 +189,9 @@ export const TableDM_C3 = ({
             setVisible(true); // Hiển thị modal
             setIsUpdate(true); // Đặt trạng thái cập nhật
             setGiaoNhanTemChi(rowData); // Cập nhật state
-            console.log("Dữ liệu sửa:", rowData);}}/>
+            console.log("Dữ liệu sửa:", rowData);
+          }}
+        />
 
         <Button
           icon="pi pi-trash"
@@ -184,24 +199,27 @@ export const TableDM_C3 = ({
           tooltipOptions={{ position: "top" }}
           style={{
             backgroundColor: "#1445a7",
+            borderColor: "#1445a7",
             marginRight: "10px",
+            fontSize: "3px",
+            height: "37px",
+            width: "37px",
           }}
           onClick={() => {
             setIsHide(true);
             setId(rowData.id);
-            setIsMultiDelete(false);}}/>
-        
-        {rowData?.trang_thai === 0 && (
+            setIsMultiDelete(false);
+          }}
+        />
+
+        {/* {rowData?.trang_thai === 0 && (
           <Button
             icon="pi pi-check"
-            tooltip="Ký C1"
+            tooltip="Ký giao"
             tooltipOptions={{ position: "top" }}
-            style={{
-              marginRight: "10px",
-              backgroundColor: "#28a745",
-            }}
+            style={{ backgroundColor: "#28a745",  borderColor: "#28a745", marginRight: "10px", fontSize: "3px", height: "37px", width: "37px" }}
             onClick={() => {
-              setActionType("Ký C1");
+              setActionType("Ký giao");
               setSelectedRecord(rowData);
               setIsConfirmVisible(true); // Hiển thị dialog xác nhận
             }}
@@ -211,17 +229,11 @@ export const TableDM_C3 = ({
         {rowData?.trang_thai === 1 && (
           <Button
             icon="pi pi-check-circle"
-            tooltip="Ký C2"
+            tooltip="Ký nhận"
             tooltipOptions={{ position: "top" }}
-            style={{
-              marginRight: "10px",
-              backgroundColor: "#ffc107",
-              color: "#212529",
-              border: "none",
-            }}
-            
+            style={{ backgroundColor: "#ffc107", borderColor: "#ffc107", marginRight: "10px", fontSize: "3px", height: "37px", width: "37px" }}
             onClick={() => {
-              setActionType("Ký C2");
+              setActionType("Ký nhận");
               setSelectedRecord(rowData);
               setIsConfirmVisible(true); // Hiển thị dialog xác nhận
             }}
@@ -232,31 +244,13 @@ export const TableDM_C3 = ({
           icon="pi pi-ban"
           tooltip="Hủy"
           tooltipOptions={{ position: "top" }}
-          style={{
-            backgroundColor: "#dc3545",
-            color: "#fff",
-            border: "none",
-          }}
+          style={{ backgroundColor: "#dc3545", borderColor: "#dc3545",color: "#fff", marginRight: "10px", fontSize: "3px", height: "37px", width: "37px" }}
           onClick={() => {
             setActionType("Hủy");
             setSelectedRecord(rowData);
-            setIsConfirmVisible(true);}}/>
-
-        <Button
-          icon="pi pi-refresh"
-          tooltip="Cập nhật loại biên bản"
-          tooltipOptions={{ position: "top" }}
-          style={{
-            backgroundColor: "#007bff",
-            color: "#fff",
-            marginLeft: "10px",
-            border: "none",
+            setIsConfirmVisible(true);
           }}
-
-          onClick={() => {
-            setActionType("Cập nhật loại biên bản");
-            setSelectedRecord(rowData);
-            setIsConfirmVisible(true);}}/>
+        /> */}
 
         <Button
           icon={`pi ${
@@ -274,7 +268,11 @@ export const TableDM_C3 = ({
           tooltipOptions={{ position: "top" }}
           style={{
             backgroundColor: "#485479",
-            marginLeft: "10px",
+            color: "#fff",
+            marginRight: "10px",
+            fontSize: "3px",
+            height: "37px",
+            width: "37px",
           }}
           onClick={() => {
             console.log("on click");
@@ -336,14 +334,16 @@ export const TableDM_C3 = ({
       if (selectedRecord) {
         let response;
         switch (actionType) {
-          case "Ký C1":
-            response = await update_kyC1_PM_C3_GIAONHAN_TEMCHI(selectedRecord.id);
-            console.log("API Response Ký C1:", response);
+          case "Ký giao":
+            response = await update_kyC1_PM_C3_GIAONHAN_TEMCHI(
+              selectedRecord.id
+            );
+            console.log("API Response Ký giao:", response);
             if (response && response.data === "Ký thành công") {
               toast.current.show({
                 severity: "success",
                 summary: "Thông báo",
-                detail: "Ký C1 thành công",
+                detail: "Ký giao thành công",
                 life: 3000,
               });
               loadData();
@@ -351,23 +351,25 @@ export const TableDM_C3 = ({
               toast.current.show({
                 severity: "error",
                 summary: "Thông báo",
-                detail: "Ký C1 không thành công",
+                detail: "Ký giao không thành công",
                 life: 3000,
               });
             }
             break;
-          case "Ký C2":
-            response = await update_kyC2_PM_C3_GIAONHAN_TEMCHI(selectedRecord.id);
-            console.log("API Response Ký C2:", response);
+          case "Ký nhận":
+            response = await update_kyC2_PM_C3_GIAONHAN_TEMCHI(
+              selectedRecord.id
+            );
+            console.log("API Response Ký nhận:", response);
             console.log(
-              "Toàn bộ phản hồi Ký C2:",
+              "Toàn bộ phản hồi Ký nhận:",
               JSON.stringify(response, null, 2)
             );
             if (response && response.data.message === "Update successful") {
               toast.current.show({
                 severity: "success",
                 summary: "Thông báo",
-                detail: "Ký C2 thành công",
+                detail: "Ký nhận thành công",
                 life: 3000,
               });
               loadData();
@@ -375,7 +377,7 @@ export const TableDM_C3 = ({
               toast.current.show({
                 severity: "error",
                 summary: "Thông báo",
-                detail: "Ký C2 không thành công",
+                detail: "Ký nhận không thành công",
                 life: 3000,
               });
             }
@@ -400,28 +402,6 @@ export const TableDM_C3 = ({
               });
             }
             break;
-          case "Cập nhật loại biên bản":
-            response = await update_loaiBBan_C3_GIAONHAN_TEMCHI(selectedRecord.id);
-            console.log("API Response Cập nhật loại biên bản:", response);
-            if (response && response.data.message === "Update successful") {
-              toast.current.show({
-                severity: "success",
-                summary: "Thông báo",
-                detail: "Cập nhật loại biên bản thành công",
-                life: 3000,
-              });
-              loadData();
-            } else {
-              toast.current.show({
-                severity: "error",
-                summary: "Thông báo",
-                detail: "Cập nhật loại biên bản không thành công",
-                life: 3000,
-              });
-            }
-            break;
-          default:
-            break;
         }
       }
     } catch (error) {
@@ -441,10 +421,10 @@ export const TableDM_C3 = ({
     const date = new Date(dateString);
     // Thêm 7 tiếng để điều chỉnh múi giờ
     date.setHours(date.getHours() + 7);
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
@@ -453,9 +433,37 @@ export const TableDM_C3 = ({
     return formatDate(rowData.ngay_giao);
   };
 
-  // Cập nhật template cho cột ngày nhận  
+  // Cập nhật template cho cột ngày nhận
   const ngayNhanTemplate = (rowData) => {
     return formatDate(rowData.ngay_nhan);
+  };
+
+  const tenNguoiGiaoBodyTemplate = (rowData) => {
+    if (!rowData || rowData.trang_thai === undefined) {
+      return `${rowData?.ten_nguoi_giao || "Không xác định"} (Chưa ký)`;
+    }
+    if (rowData.trang_thai === 1 || rowData.trang_thai === 2) {
+      return `${rowData.ten_nguoi_giao} (Đã ký)`;
+    } else if (rowData.trang_thai === 0) {
+      return `${rowData.ten_nguoi_giao} (Chưa ký)`;
+    } else if (rowData.trang_thai === 3) {
+      return `${rowData.ten_nguoi_giao} (Đã hủy)`;
+    }
+    return rowData.ten_nguoi_giao; // Default case
+  };
+
+  const tenNguoiNhanBodyTemplate = (rowData) => {
+    if (!rowData || rowData.trang_thai === undefined) {
+      return `${rowData?.ten_nguoi_nhan || "Không xác định"} (Chưa ký)`;
+    }
+    if (rowData.trang_thai === 2) {
+      return `${rowData.ten_nguoi_nhan} (Đã ký)`;
+    } else if (rowData.trang_thai === 0 || rowData.trang_thai === 1) {
+      return `${rowData.ten_nguoi_nhan} (Chưa ký)`;
+    } else if (rowData.trang_thai === 3) {
+      return `${rowData.ten_nguoi_nhan} (Đã hủy)`;
+    }
+    return rowData.ten_nguoi_nhan; // Default case
   };
 
   return (
@@ -468,7 +476,8 @@ export const TableDM_C3 = ({
               value={globalFilterValue}
               onChange={onGlobalFilterChange}
               placeholder="Tìm kiếm"
-              className="w-full md:w-auto"/>
+              className="w-full md:w-auto"
+            />
           </span>
         </div>
 
@@ -485,121 +494,147 @@ export const TableDM_C3 = ({
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           selection={selectedRecords}
           onSelectionChange={(e) => setSelectedRecords(e.value)}
-          responsiveLayout="scroll">
+          responsiveLayout="scroll"
+          sortField="ngay_giao"
+          sortOrder={-1}
+        >
+          <Column
+            selectionMode="multiple"
+            headerStyle={{
+              width: "3em",
+              backgroundColor: "#1445a7",
+              color: "#fff",
+            }}
+          ></Column>
 
-            <Column
-                selectionMode="multiple"
-                headerStyle={{
-                width: "3em",
-                backgroundColor: "#1445a7",
-                color: "#fff",}}>
-            </Column>
+          <Column
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            body={buttonOption}
+            header="Thao tác"
+            className="min-w-8rem"
+          ></Column>
 
-            <Column
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                body={buttonOption}
-                header="Thao tác"
-                className="min-w-8rem">
-            </Column>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ten_pb"
+            header="Đơn vị giao"
+            className="min-w-8rem"
+          />
 
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="id"
-                header="ID"
-                className="min-w-8rem">
-            </Column>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ten_dv"
+            header="Đơn vị nhận"
+            className="min-w-8rem"
+          />
 
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="don_vi_giao"
-                header="Đơn vị giao"
-                body={donviGiaoBodyTemplate}
-                className="min-w-8rem"/>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ten_nguoi_giao"
+            header="Người giao"
+            className="min-w-10rem"
+            body={(rowData) => {
+              if (rowData.trang_thai === 0) {
+                return (
+                  <>
+                    <p style={{ fontSize: "15px" }}>{rowData.ten_nguoi_giao}</p>
+                    <p style={{ color: "red", fontSize: "12px" }}>Chưa ký</p>
+                  </>
+                );
+              } else {
+                return (
+                  <div>
+                    <p style={{ fontSize: "15px" }}>{rowData.ten_nguoi_giao}</p>
+                    <p style={{ color: "green", fontSize: "12px" }}>
+                      Đã ký {new Date(rowData.ngay_giao).getDate()}-
+                      {new Date(rowData.ngay_giao).getMonth() + 1}-
+                      {new Date(rowData.ngay_giao).getFullYear()}{" "}
+                      {new Date(rowData.ngay_giao).getHours()}:
+                      {new Date(rowData.ngay_giao).getMinutes()}:
+                      {new Date(rowData.ngay_giao).getSeconds()}
+                    </p>
+                  </div>
+                );
+              }
+            }}
+          ></Column>
 
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="don_vi_nhan"
-                header="Đơn vị nhận"
-                body={donviNhanBodyTemplate}
-                className="min-w-8rem"/>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ten_nguoi_nhan"
+            header="Người nhận"
+            className="min-w-10rem"
+            body={(rowData) => {
+              if (rowData.trang_thai === 0) {
+                return (
+                  <>
+                    <p style={{ fontSize: "15px" }}>{rowData.ten_nguoi_nhan}</p>
+                    <p style={{ color: "red", fontSize: "12px" }}>Chưa ký</p>
+                  </>
+                );
+              } else {
+                return (
+                  <div>
+                    <p style={{ fontSize: "15px" }}>{rowData.ten_nguoi_nhan}</p>
+                    <p style={{ color: "green", fontSize: "12px" }}>
+                      Đã ký {new Date(rowData.ngay_nhan).getDate()}-
+                      {new Date(rowData.ngay_nhan).getMonth() + 1}-
+                      {new Date(rowData.ngay_nhan).getFullYear()}{" "}
+                      {new Date(rowData.ngay_nhan).getHours()}:
+                      {new Date(rowData.ngay_nhan).getMinutes()}:
+                      {new Date(rowData.ngay_nhan).getSeconds()}
+                    </p>
+                  </div>
+                );
+              }
+            }}
+          ></Column>
 
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="nguoi_giao"
-                header="Người giao"
-                className="min-w-8rem">
-            </Column>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ngay_giao"
+            header="Ngày giao"
+            body={ngayGiaoTemplate}
+            className="min-w-8rem"
+          ></Column>
 
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="nguoi_nhan"
-                header="Người nhận"
-                className="min-w-8rem">
-            </Column>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="ngay_nhan"
+            header="Ngày nhận"
+            body={ngayNhanTemplate}
+            className="min-w-8rem"
+          ></Column>
 
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="ngay_giao"
-                header="Ngày giao"
-                body={ngayGiaoTemplate}
-                className="min-w-8rem">
-            </Column>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="loai"
+            header="Loại"
+            className="min-w-8rem"
+          ></Column>
 
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="ngay_nhan"
-                header="Ngày nhận"
-                body={ngayNhanTemplate}
-                className="min-w-8rem">
-            </Column>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="soluong"
+            header="Số lượng"
+            className="min-w-8rem"
+          ></Column>
 
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="loai"
-                header="Loại"
-                className="min-w-8rem">
-            </Column>
-
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="soluong"
-                header="Số lượng"
-                className="min-w-8rem">
-            </Column>
-
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="donvi_tinh"
-                header="Đơn vị tính"
-                className="min-w-8rem">
-            </Column>
-          
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="trang_thai"
-                header="Trạng thái"
-                body={trangThaiBodyTemplate}
-                className="min-w-8rem"/>
-
-            <Column
-                {...propSortAndFilter}
-                headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-                field="loai_bban"
-                header="Loại biên bản "
-                body={LoaiBBChuyenDoi}
-                className="min-w-8rem"
-            ></Column>
+          <Column
+            {...propSortAndFilter}
+            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
+            field="donvi_tinh"
+            header="Đơn vị tính"
+            className="min-w-8rem"
+          ></Column>
         </DataTable>
 
         <div className="flex flex-column md:flex-row justify-content-between align-items-center gap-3 mt-4">
@@ -610,9 +645,13 @@ export const TableDM_C3 = ({
               icon={PrimeIcons.ANGLE_DOUBLE_LEFT}
               onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
               disabled={page === 1}
-              severity="secondary"/>
+              severity="secondary"
+            />
 
-            <p className="mx-4 mb-0"> Trang {page} trong tổng số {pageCount} trang </p>
+            <p className="mx-4 mb-0">
+              {" "}
+              Trang {page} trong tổng số {pageCount} trang{" "}
+            </p>
 
             <Button
               outlined
@@ -620,7 +659,8 @@ export const TableDM_C3 = ({
               severity="secondary"
               icon={PrimeIcons.ANGLE_DOUBLE_RIGHT}
               onClick={() => setPage((prev) => Math.min(prev + 1, pageCount))}
-              disabled={page === pageCount}/>
+              disabled={page === pageCount}
+            />
           </div>
 
           <Dropdown
@@ -648,7 +688,6 @@ export const TableDM_C3 = ({
             : "Bạn có chắc chắn xóa bản ghi này không?"
         }
         icon="pi pi-info-circle"
-
         footer={
           <div>
             <Button
@@ -656,21 +695,22 @@ export const TableDM_C3 = ({
               outlined
               label="Hủy"
               icon="pi pi-times"
-              onClick={cancel}/>
+              onClick={cancel}
+            />
 
             <Button
               severity="danger"
               label="Đồng ý"
               icon="pi pi-check"
               onClick={confirm}
-              autoFocus/>
+              autoFocus
+            />
           </div>
-        }>
-
+        }
+      >
         <div className="card flex flex-wrap gap-2 justify-content-center"></div>
-
       </ConfirmDialog>
-      
+
       <ConfirmDialog
         visible={isConfirmVisible}
         onHide={() => setIsConfirmVisible(false)}

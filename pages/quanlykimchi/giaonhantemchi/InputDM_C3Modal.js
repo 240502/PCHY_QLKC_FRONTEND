@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { QLKC_C3_GIAONHAN_TEMCHI } from "../../../models/QLKC_C3_GIAONHAN_TEMCHI";
-import { insert_QLKC_C3_GIAONHAN_TEMCHI, update_QLKC_C3_GIAONHAN_TEMCHI } from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
+import {
+  insert_QLKC_C3_GIAONHAN_TEMCHI,
+  update_QLKC_C3_GIAONHAN_TEMCHI,
+} from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
 import { getDM_PHONGBANByMA_DVIQLY } from "../../../services/quantrihethong/DM_PHONGBANService";
+import { HT_NGUOIDUNG } from "../../../models/HT_NGUOIDUNG";
+import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOIDUNGService";
 import { Dropdown } from "primereact/dropdown";
 import { Calendar } from "primereact/calendar";
 
@@ -19,10 +24,15 @@ export const InputDM_C3Modal = ({
   bienBan,
   setBienBan,
 }) => {
-  const [C3GiaoNhanTemChi, setC3GiaoNhanTemChi] = useState({ ...QLKC_C3_GIAONHAN_TEMCHI });
+  const [C3GiaoNhanTemChi, setC3GiaoNhanTemChi] = useState(
+    QLKC_C3_GIAONHAN_TEMCHI
+  );
   const [errors, setErrors] = useState({});
   const [dsDonvi, setDsDonvi] = useState([]);
+  const [users, setUsers] = useState([HT_NGUOIDUNG]);
+  const [currentUserName, setCurrentUserName] = useState("");
   const [phongBanArr, setPhongBanArr] = useState([]);
+  const currentUser = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const getDSDVIQLY = () => {
     const storedDonvi = sessionStorage.getItem("ds_donvi");
@@ -49,33 +59,67 @@ export const InputDM_C3Modal = ({
     getDSDVIQLY1();
   }, [isUpdate, giaoNhanTemChi]);
 
-  // Hàm cập nhật dữ liệu trong state
-  const handleInputChange = (field, value) => {
-    setC3GiaoNhanTemChi({
-      ...C3GiaoNhanTemChi,
-      [field]: value || "",  // Default to empty string if no value is provided
-    });
-  };
-  
+  useEffect(() => {
+    const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
+      try {
+        const ma_dviqly = JSON.parse(
+          sessionStorage.getItem("current_MADVIQLY") || ""
+        );
+        const data = { ma_dviqly: ma_dviqly };
+        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(data);
+        setUsers(res);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    getHT_NGUOIDUNGByMA_DVIQLY();
+
+    console.log("C3GiaoNhanTemChi", C3GiaoNhanTemChi);
+  }, []);
+
+  useEffect(() => {
+    if (currentUser && currentUser.id) {
+      console.log("Current User ID:", currentUser.id);
+      setC3GiaoNhanTemChi((prev) => ({
+        ...prev,
+        nguoi_giao: currentUser.id,
+      }));
+      setCurrentUserName(currentUser.ho_ten || "");
+    } else {
+      console.error("User data is not available or invalid:", currentUser);
+    }
+  }, [isUpdate]);
 
   // Hàm xử lý dữ liệu khi submit
   const handleCreate = async () => {
     // Chuẩn bị dữ liệu trước khi gửi
     const dataToSend = {
       ...C3GiaoNhanTemChi,
-      ngay_giao: C3GiaoNhanTemChi.ngay_giao ? new Date(C3GiaoNhanTemChi.ngay_giao).toISOString() : null,
-      ngay_nhan: C3GiaoNhanTemChi.ngay_nhan ? new Date(C3GiaoNhanTemChi.ngay_nhan).toISOString() : null,
-      soluong: C3GiaoNhanTemChi.soluong ? parseInt(C3GiaoNhanTemChi.soluong, 10) : 0
+      ngay_giao: C3GiaoNhanTemChi.ngay_giao
+        ? new Date(C3GiaoNhanTemChi.ngay_giao).toISOString()
+        : null,
+      ngay_nhan: C3GiaoNhanTemChi.ngay_nhan
+        ? new Date(C3GiaoNhanTemChi.ngay_nhan).toISOString()
+        : null,
+      soluong: C3GiaoNhanTemChi.soluong
+        ? parseInt(C3GiaoNhanTemChi.soluong, 10)
+        : 0,
     };
 
     // Loại bỏ các trường có giá trị null/undefined/empty string
-    Object.keys(dataToSend).forEach(key => {
-      if (dataToSend[key] === null || dataToSend[key] === undefined || dataToSend[key] === '') {
+    Object.keys(dataToSend).forEach((key) => {
+      if (
+        dataToSend[key] === null ||
+        dataToSend[key] === undefined ||
+        dataToSend[key] === ""
+      ) {
         delete dataToSend[key];
       }
     });
 
     try {
+      console.log("data C3", dataToSend);
       await insert_QLKC_C3_GIAONHAN_TEMCHI(dataToSend);
       toast.current.show({
         severity: "success",
@@ -86,7 +130,7 @@ export const InputDM_C3Modal = ({
       setVisible(false);
       loadData();
     } catch (err) {
-      console.error('Error details:', err);
+      console.error("Error details:", err);
       toast.current.show({
         severity: "error",
         summary: "Thông báo",
@@ -95,17 +139,41 @@ export const InputDM_C3Modal = ({
       });
     }
   };
-  
+
+  const validateFields = () => {
+    const newErrors = {};
+    if (!C3GiaoNhanTemChi.don_vi_giao)
+      newErrors.don_vi_giao = "Đơn vị giao là bắt buộc";
+    if (!C3GiaoNhanTemChi.don_vi_nhan)
+      newErrors.don_vi_nhan = "Đơn vị nhận là bắt buộc";
+    if (!C3GiaoNhanTemChi.loai) newErrors.loai = "Loại là bắt buộc";
+    if (!C3GiaoNhanTemChi.soluong) newErrors.soluong = "Số lượng là bắt buộc";
+    if (!C3GiaoNhanTemChi.donvi_tinh)
+      newErrors.donvi_tinh = "Đơn vị tính là bắt buộc";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = () => {
-    if (isUpdate) {
-      handleUpdate();
+    if (validateFields()) {
+      if (isUpdate) {
+        handleUpdate();
+      } else {
+        handleCreate();
+      }
     } else {
-      handleCreate();
+      toast.current.show({
+        severity: "error",
+        summary: "Thông báo",
+        detail: "Vui lòng điền đầy đủ thông tin",
+        life: 3000,
+      });
     }
   };
 
   const handleUpdate = async () => {
     try {
+      console.log(C3GiaoNhanTemChi);
       await update_QLKC_C3_GIAONHAN_TEMCHI(C3GiaoNhanTemChi);
       toast.current.show({
         severity: "success",
@@ -133,32 +201,57 @@ export const InputDM_C3Modal = ({
       console.log(err.message);
     }
   };
-  getAllD_PhongBan();
+  useEffect(() => {
+    getAllD_PhongBan();
+  }, []);
+  const handleInputChange = (field, value) => {
+    console.log(`Updating field: ${field}, with value: ${value}`);
+    setC3GiaoNhanTemChi({
+      ...C3GiaoNhanTemChi,
+      [field]: value || "",
+    });
+  };
 
+  const handleDateChange = useCallback((e) => {
+    setC3GiaoNhanTemChi((prev) => ({
+      ...prev,
+      ngay_giao: e.value,
+    }));
+  }, []);
 
   return (
     <Dialog
-      header={isUpdate ? "Sửa thông tin giao nhận tem chì C3" : "Thêm mới giao nhận tem chì C3"}
+      header={
+        isUpdate
+          ? "Sửa thông tin giao nhận tem chì C3"
+          : "Thêm mới giao nhận tem chì C3"
+      }
       visible={visible}
-      className=  "w-6 md:w-4/12 lg:w-3/12"
+      className="w-6 md:w-4/12 lg:w-3/12"
       onHide={() => {
         setVisible(false);
         setC3GiaoNhanTemChi({}); // Reset dữ liệu khi đóng modal
-      }}>
+      }}
+    >
       <div className="flex flex-column gap-4">
         <div className="flex gap-4 mt-4">
           <div className="flex flex-column flex-1">
-            <label htmlFor="don_vi_giao" className="mb-2"> Đơn vị giao </label>
-
+            <label htmlFor="don_vi_giao" className="mb-2">
+              Đơn vị giao <span style={{ color: "red" }}>*</span>
+            </label>
             <Dropdown
-              className="mt-2 w-full"
+              className={`mt-2 w-full ${errors.don_vi_giao ? "p-invalid" : ""}`}
               value={bienBan?.don_vi_giao}
               options={phongBanArr}
               filter
               onChange={(e) => {
-                const donVi = donViArr.find((item) => item.id === e.value);
+                console.log(e.value);
                 setBienBan({
                   ...bienBan,
+                  don_vi_giao: e.value,
+                });
+                setC3GiaoNhanTemChi({
+                  ...C3GiaoNhanTemChi,
                   don_vi_giao: e.value,
                 });
               }}
@@ -168,45 +261,66 @@ export const InputDM_C3Modal = ({
               placeholder="Chọn đơn vị "
               onFocus={() => {
                 setErrors({ ...errors, don_vi_giao: null });
-              }} />
-              {errors?.don_vi_giao&& (
+              }}
+            />
+            {errors?.don_vi_giao && (
               <small className="p-error">{errors.don_vi_giao}</small>
             )}
           </div>
 
           <div className="flex flex-column flex-1">
-            <label htmlFor="don_vi_nhan" className="mb-2"> Đơn vị nhận </label>
-
+            <label htmlFor="don_vi_nhan" className="mb-2">
+              Đơn vị nhận <span style={{ color: "red" }}>*</span>
+            </label>
             <Dropdown
+              className={`mt-2 w-full ${errors.don_vi_nhan ? "p-invalid" : ""}`}
+              value={bienBan?.don_vi_nhan}
+              options={donViArr}
+              filter
+              onChange={(e) => {
+                console.log(e.value);
+                setBienBan({
+                  ...bienBan,
+                  don_vi_nhan: e.value,
+                });
+                setC3GiaoNhanTemChi({
+                  ...C3GiaoNhanTemChi,
+                  don_vi_nhan: e.value,
+                });
+              }}
               id="don_vi_nhan"
-              value={C3GiaoNhanTemChi.don_vi_nhan}
-              options={dsDonvi}
-              onChange={(e) => handleInputChange("don_vi_nhan", e.value)}
-              optionLabel="ten"
               optionValue="ma_dviqly"
-              placeholder="Chọn đơn vị nhận"
-              className="w-full"
+              optionLabel="ten"
+              placeholder="Chọn đơn vị "
+              onFocus={() => {
+                setErrors({ ...errors, don_vi_nhan: null });
+              }}
             />
+            {errors?.don_vi_nhan && (
+              <small className="p-error">{errors.don_vi_nhan}</small>
+            )}
           </div>
         </div>
-        
+
         <div className="flex gap-4 mt-4">
           <div className="flex flex-column flex-1">
-            <label htmlFor="loai" className="mb-2"> Loại </label>
+            <label htmlFor="loai" className="mb-2">
+              Loại <span style={{ color: "red" }}>*</span>
+            </label>
             <Dropdown
               id="loai"
-              className="w-full"
+              className={`w-full ${errors.loai ? "p-invalid" : ""}`}
               value={C3GiaoNhanTemChi.loai}
               options={[
-                { label: 'Tem', value: 'Tem' },
-                { label: 'Chì', value: 'Chì' }
+                { label: "Tem", value: "Tem" },
+                { label: "Chì", value: "Chì" },
               ]}
               onChange={(e) => {
                 const newValue = e.value;
-                setC3GiaoNhanTemChi({ 
-                  ...C3GiaoNhanTemChi, 
+                setC3GiaoNhanTemChi({
+                  ...C3GiaoNhanTemChi,
                   loai: newValue,
-                  donvi_tinh: newValue === 'Tem' ? 'Cái' : 'Viên'
+                  donvi_tinh: newValue === "Tem" ? "Cái" : "Viên",
                 });
               }}
               placeholder="Chọn loại..."
@@ -215,14 +329,18 @@ export const InputDM_C3Modal = ({
           </div>
 
           <div className="flex flex-column flex-1">
-            <label htmlFor="donvi_tinh" className="mb-2">Đơn vị tính</label>
-
+            <label htmlFor="donvi_tinh" className="mb-2">
+              Đơn vị tính <span style={{ color: "red" }}>*</span>
+            </label>
             <InputText
               id="donvi_tinh"
-              className="w-full"
+              className={`w-full ${errors.donvi_tinh ? "p-invalid" : ""}`}
               placeholder="Nhập đơn vị tính..."
               onChange={(e) => {
-                setC3GiaoNhanTemChi({ ...C3GiaoNhanTemChi, donvi_tinh: e.target.value });
+                setC3GiaoNhanTemChi({
+                  ...C3GiaoNhanTemChi,
+                  donvi_tinh: e.target.value,
+                });
               }}
               onFocus={() => {
                 if (errors.donvi_tinh) {
@@ -236,61 +354,20 @@ export const InputDM_C3Modal = ({
               <small className="p-error">{errors.donvi_tinh}</small>
             )}
           </div>
-        </div>
-
-        <div className="flex gap-4 mt-4">
-          <div className="flex flex-column flex-1">
-            <label htmlFor="nguoi_giao" className="mb-2"> Người giao</label>
-            <InputText
-              id="nguoi_giao"
-              className="w-full"
-              placeholder="Nhập người giao..."
-              onChange={(e) => {
-                setC3GiaoNhanTemChi({ ...C3GiaoNhanTemChi, nguoi_giao: e.target.value });
-              }}
-              onFocus={() => {
-                if (errors.nguoi_giao) {
-                  setErrors({});
-                }
-              }}
-              type="text"
-              value={C3GiaoNhanTemChi.nguoi_giao}
-            />
-            {errors.nguoi_giao && (
-              <small className="p-error">{errors.nguoi_giao}</small>
-            )}
-          </div>
 
           <div className="flex flex-column flex-1">
-            <label htmlFor="nguoi_nhan" className="mb-2"> Người nhận </label>
-            <InputText
-              id="nguoi_nhan"
-              className="w-full"
-              placeholder="Nhập người nhận..."
-              onChange={(e) => {
-                setC3GiaoNhanTemChi({ ...C3GiaoNhanTemChi, nguoi_nhan: e.target.value });
-              }}
-              onFocus={() => {
-                if (errors.nguoi_nhan) {
-                  setErrors({});
-                }
-              }}
-              type="text"
-              value={C3GiaoNhanTemChi.nguoi_nhan}
-            />
-            {errors.nguoi_nhan && (
-              <small className="p-error">{errors.nguoi_nhan}</small>
-            )}
-          </div>
-
-          <div className="flex flex-column flex-1">
-            <label htmlFor="soluong" className="mb-2"> Số lượng </label>
+            <label htmlFor="soluong" className="mb-2">
+              Số lượng <span style={{ color: "red" }}>*</span>
+            </label>
             <InputText
               id="soluong"
-              className="w-full"
+              className={`w-full ${errors.soluong ? "p-invalid" : ""}`}
               placeholder="Nhập số lượng..."
               onChange={(e) => {
-                setC3GiaoNhanTemChi({ ...C3GiaoNhanTemChi, soluong: e.target.value });
+                setC3GiaoNhanTemChi({
+                  ...C3GiaoNhanTemChi,
+                  soluong: e.target.value,
+                });
               }}
               onFocus={() => {
                 if (errors.soluong) {
@@ -308,20 +385,66 @@ export const InputDM_C3Modal = ({
 
         <div className="flex gap-4 mt-4">
           <div className="flex flex-column flex-1">
-            <label htmlFor="ngay_giao" className="mb-2"> Ngày giao </label>
+            <label htmlFor="soluong" className="mb-2">
+              Người giao <span style={{ color: "red" }}>*</span>
+            </label>
+            <InputText
+              id="nguoi_giao"
+              className={`w-full ${errors.nguoi_giao ? "p-invalid" : ""}`}
+              value={currentUserName}
+              disabled
+            />
+          </div>
+
+          <div className="flex flex-column flex-1">
+            <label htmlFor="nguoi_nhan" className="mb-2">
+              Người nhận <span style={{ color: "red" }}>*</span>
+            </label>
+            <Dropdown
+              value={C3GiaoNhanTemChi?.nguoi_nhan}
+              className={`w-full ${errors.nguoi_nhan ? "p-invalid" : ""}`}
+              options={users}
+              placeholder="Chọn"
+              showClear
+              filter
+              optionValue="id"
+              optionLabel="hO_TEN"
+              onChange={(e) => {
+                console.log(`Selected user: ${e.value}`);
+                handleInputChange("nguoi_nhan", e.value);
+              }}
+              onFocus={() => {
+                if (errors.nguoi_nhan) {
+                  setErrors({ ...errors, nguoi_nhan: null });
+                }
+              }}
+            />
+            {errors.nguoi_nhan && (
+              <small className="p-error">{errors.nguoi_nhan}</small>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-4 mt-4">
+          <div className="flex flex-column flex-1">
+            <label htmlFor="ngay_giao" className="mb-2">
+              Ngày giao
+            </label>
             <Calendar
               id="ngay_giao"
               className="w-full"
               placeholder="Chọn ngày giao..."
-              onChange={(e) => {
-                setC3GiaoNhanTemChi({ ...C3GiaoNhanTemChi, ngay_giao: e.target.value });
-              }}
-              onFocus={() => {
+              onChange={handleDateChange}
+              onBlur={() => {
                 if (errors.ngay_giao) {
                   setErrors({});
                 }
               }}
-              value={C3GiaoNhanTemChi.ngay_giao}
+              value={
+                C3GiaoNhanTemChi.ngay_giao
+                  ? new Date(C3GiaoNhanTemChi.ngay_giao)
+                  : null
+              }
             />
             {errors.ngay_giao && (
               <small className="p-error">{errors.ngay_giao}</small>
@@ -329,18 +452,24 @@ export const InputDM_C3Modal = ({
           </div>
 
           <div className="flex flex-column flex-1">
-            <label htmlFor="ngay_nhan" className="mb-2"> Ngày nhận </label>
+            <label htmlFor="ngay_nhan" className="mb-2">
+              Ngày nhận
+            </label>
             <Calendar
               id="ngay_nhan"
               className="w-full"
               placeholder="Chọn ngày nhận..."
               onChange={(e) => {
-                setC3GiaoNhanTemChi({ ...C3GiaoNhanTemChi, ngay_nhan: e.target.value });
+                setC3GiaoNhanTemChi({
+                  ...C3GiaoNhanTemChi,
+                  ngay_nhan: e.target.value,
+                });
               }}
               onFocus={() => {
                 if (errors.ngay_nhan) {
                   setErrors({});
                 }
+                console.log("focus");
               }}
               value={C3GiaoNhanTemChi.ngay_nhan}
             />

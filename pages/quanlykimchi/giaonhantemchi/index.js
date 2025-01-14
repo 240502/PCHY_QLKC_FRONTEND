@@ -8,15 +8,18 @@ import { Toast } from "primereact/toast";
 import { Panel } from "primereact/panel";
 import { TableDM_C3 } from "./TableDM_C3";
 import { InputDM_C3Modal } from "./InputDM_C3Modal";
-import { QLKC_C3_GIAONHAN_TEMCHI} from "../../../models/QLKC_C3_GIAONHAN_TEMCHI";
+import { QLKC_C3_GIAONHAN_TEMCHI } from "../../../models/QLKC_C3_GIAONHAN_TEMCHI";
 import { search_QLKC_C3_GIAONHAN_TEMCHI } from "../../../services/quanlykimchi/QLKC_C3_GIAONHAN_TEMCHIService";
 import { getDM_PHONGBANByMA_DVIQLY } from "../../../services/quantrihethong/DM_PHONGBANService";
 import { get_All_DM_DONVI } from "../../../services/quantrihethong/DM_DONVIService";
 import BienBanViewer from "./BienBanViewer";
 
+import { HT_NGUOIDUNG_Service } from "../../../services/quantrihethong/HT_NGUOIDUNGService";
+
 const GiaoNhanTemChiC3 = () => {
   const currentMenu = sessionStorage.getItem("currentMenu");
   const [page, setPage] = useState(1);
+  const [pageIndex, setPageIndex] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [pageCount, setPageCount] = useState(0);
   const [dsDonvi, setDsDonvi] = useState([]);
@@ -27,14 +30,17 @@ const GiaoNhanTemChiC3 = () => {
     don_vi_giao: "",
     don_vi_nhan: "",
   });
-  const [arrC3GiaoNhanTemChi, setArrC3GiaoNhanTemChi] = useState([QLKC_C3_GIAONHAN_TEMCHI]);
+  const [arrC3GiaoNhanTemChi, setArrC3GiaoNhanTemChi] = useState([
+    QLKC_C3_GIAONHAN_TEMCHI,
+  ]);
   const [GiaoNhanTemChi, setGiaoNhanTemChi] = useState(QLKC_C3_GIAONHAN_TEMCHI);
   const [bienBan, setBienBan] = useState({});
   const [visible, setVisible] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [visibleViewer, setVisibleViewer] = useState(false);
   const [phongBanArr, setPhongBanArr] = useState([]);
-  
+  const [bienBanArr, setBienBanArr] = useState([]);
+
   const toast = useRef(null);
 
   useEffect(() => {
@@ -44,16 +50,81 @@ const GiaoNhanTemChiC3 = () => {
     }
   }, []);
 
+  // const loadData = async () => {
+  //   try {
+  //     const data = {
+  //       pageIndex: page,
+  //       pageSize: pageSize,
+  //       ...(options.don_vi_giao ? { don_vi_giao: options.don_vi_giao} : {}),
+  //       ...(options.don_vi_nhan ? { don_vi_nhan: options.don_vi_nhan } : {}),
+  //       ...(options.loai ? { loai: options.loai } : {}),
+  //       ...(options.trang_thai !== undefined
+  //         ? { trang_thai: options.trang_thai }: {}),
+  //     };
+
+  //     console.log("Payload gửi lên API:", data);
+
+  //     const items = await search_QLKC_C3_GIAONHAN_TEMCHI(data);
+  //     console.log("Phản hồi từ API:", items);
+
+  //     if (items && items.data) {
+  //       const mappedData = await Promise.all(
+  //         items.data.map(async (item) => {
+  //           let nguoiGiao = {};
+  //           let nguoiNhan = {};
+
+  //           // Fetching user data with error handling
+  //           const [giaoRes, nhanRes] = await Promise.allSettled([
+  //             item.nguoi_giao ? HT_NGUOIDUNG_Service.getById(item.nguoi_giao) : Promise.resolve(null),
+  //             item.nguoi_nhan ? HT_NGUOIDUNG_Service.getById(item.nguoi_nhan) : Promise.resolve(null),
+  //           ]);
+
+  //           nguoiGiao = giaoRes.status === 'fulfilled' ? giaoRes.value : {};
+  //           nguoiNhan = nhanRes.status === 'fulfilled' ? nhanRes.value : {};
+
+  //           return {
+  //             ...item,
+  //             ten_nguoi_giao: nguoiGiao.ho_ten || "Không xác định",
+  //             ten_nguoi_nhan: nguoiNhan.ho_ten || "Không xác định",
+  //           };
+  //         })
+  //       );
+
+  //       setArrC3GiaoNhanTemChi(mappedData);
+  //       console.log("mappedData", mappedData);
+  //     } else {
+  //       console.error("Không có dữ liệu trong phản hồi từ API");
+  //     }
+
+  //     // Ensure totalItems exists before calculating pageCount
+  //     setPageCount(Math.ceil((items?.totalItems || 0) / pageSize));
+  //   } catch (err) {
+  //     console.error("Lỗi tải dữ liệu:", err.message);
+  //     setArrC3GiaoNhanTemChi([]);
+  //     setPageCount(0);
+  //   }
+  // };
+
   const loadData = async () => {
     try {
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      const isPhongKinhDoanh = user && user.ten_phongban === "Phòng kinh doanh";
+
+      const ma_dviqly = JSON.parse(
+        sessionStorage.getItem("current_MADVIQLY") || ""
+      );
+
       const data = {
         pageIndex: page,
         pageSize: pageSize,
-        ...(options.don_vi_giao ? { don_vi_giao: options.don_vi_giao} : {}),
+        ma_dviqly,
+        ...(isPhongKinhDoanh ? {} : { userId: user.id }), // Nếu là phòng kinh doanh, không thêm userId
+        ...(options.don_vi_giao ? { don_vi_giao: options.don_vi_giao } : {}),
         ...(options.don_vi_nhan ? { don_vi_nhan: options.don_vi_nhan } : {}),
         ...(options.loai ? { loai: options.loai } : {}),
         ...(options.trang_thai !== undefined
-          ? { trang_thai: options.trang_thai }: {}),
+          ? { trang_thai: options.trang_thai }
+          : {}),
       };
 
       console.log("Payload gửi lên API:", data);
@@ -62,10 +133,43 @@ const GiaoNhanTemChiC3 = () => {
       console.log("Phản hồi từ API:", items);
 
       if (items && items.data) {
-        setArrC3GiaoNhanTemChi(items.data || []);
+        const mappedData = await Promise.all(
+          items.data.map(async (item) => {
+            let nguoiGiao = {};
+            let nguoiNhan = {};
+
+            if (item.nguoi_giao) {
+              try {
+                const res = await HT_NGUOIDUNG_Service.getById(item.nguoi_giao);
+                nguoiGiao = res;
+              } catch (err) {
+                console.error("Error fetching nguoI_GIAO:", err);
+              }
+            }
+
+            if (item.nguoi_nhan) {
+              try {
+                const res = await HT_NGUOIDUNG_Service.getById(item.nguoi_nhan);
+                nguoiNhan = res;
+              } catch (err) {
+                console.error("Error fetching nguoI_NHAN:", err);
+              }
+            }
+
+            return {
+              ...item,
+              ten_nguoi_giao: nguoiGiao.ho_ten || "Không xác định",
+              ten_nguoi_nhan: nguoiNhan.ho_ten || "Không xác định",
+            };
+          })
+        );
+
+        setArrC3GiaoNhanTemChi(mappedData);
+        console.log("mappedData", mappedData);
       } else {
         console.error("Không có dữ liệu trong phản hồi từ API");
       }
+
       setPageCount(Math.ceil((items?.totalItems || 0) / pageSize));
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err.message);
@@ -90,70 +194,15 @@ const GiaoNhanTemChiC3 = () => {
     setBienBan({});
   };
 
-  const handleOnClickKySoBtn = (bienBan) => {
+  const handleOnClickKySoBtn = (giaoNhanTemChi) => {
     setVisibleViewer(true);
-    setBienBan(bienBan);
+    setBienBan(giaoNhanTemChi);
   };
 
-  const handleOnClickUpdateBtn = (bienBan) => {
+  const handleOnClickUpdateBtn = (giaoNhanTemChi) => {
     setIsUpdate(true);
     setVisible(true);
-    setBienBan(bienBan);
-  };
-
-  const loadDataTable = async () => {
-    try {
-      const data = {
-        pageIndex: pageIndex,
-        pageSize: pageSize,
-        don_vi_nhan: options.donViNhan,
-        don_vi_giao: options.donViGiao,
-        trang_thai: options.trangThai,
-        loai_bban: options.loaiBienBan !== 2 ? options.loaiBienBan : "",
-        don_vi: current_MADVIQLY === "PA23" ? "" : current_MADVIQLY,
-        userId:
-          current_MADVIQLY === "PA23" ||
-          userLocal.ten_donvi === "CÔNG TY ĐIỆN LỰC HƯNG YÊN"
-            ? ""
-            : userLocal.id,
-      };
-      const res = await search_BBAN_BANGIAO_KIM(data);
-      console.log("bien ban", res?.data);
-      let newBienBanArr = [];
-
-      res?.data.forEach(async (bb, index) => {
-        let nguoiNhan = {};
-        let nguoiGiao = {};
-        if (bb?.nguoi_nhan) {
-          try {
-            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoi_nhan);
-            nguoiNhan = res;
-          } catch (err) {
-            console.log(err);
-          }
-        }
-        if (bb?.nguoi_giao) {
-          try {
-            const res = await HT_NGUOIDUNG_Service.getById(bb.nguoi_giao);
-            nguoiGiao = res;
-          } catch (err) {
-            console.log(err);
-          }
-        }
-
-        newBienBanArr.push({
-          ...bb,
-          ten_nguoi_giao: nguoiGiao.ho_ten,
-          ten_nguoi_nhan: nguoiNhan.ho_ten,
-        });
-        setBienBanArr(newBienBanArr);
-      });
-
-      setPageCount(Math.ceil(res.totalItems / pageSize));
-    } catch (err) {
-      console.log(err.message);
-      setBienBanArr([]);
-    }
+    setBienBan(giaoNhanTemChi);
   };
 
   const showToast = (type, message) => {
@@ -200,30 +249,29 @@ const GiaoNhanTemChiC3 = () => {
       <Toast ref={toast} />
       <div className="col-12">
         <div className="card">
-        <Panel header={currentMenu} className="mb-4">
+          <Panel header={currentMenu} className="mb-4">
             <Divider style={{ marginTop: "0", marginBottom: "10px" }} />
 
             <div className="flex flex-column lg:flex-row gap-3">
               {/* Đơn vị giao */}
               <div className="flex-auto">
-                <label htmlFor="don_vi_giao" className="mb-2 block"> Đơn vị giao </label>
+                <label htmlFor="don_vi_giao" className="mb-2 block">
+                  {" "}
+                  Đơn vị giao{" "}
+                </label>
                 <Dropdown
                   id="don_vi_giao"
                   className="w-full"
                   placeholder="Chọn đơn vị giao"
                   value={options.don_vi_giao}
-                  // options={dsDonvi.map((dv) => ({
-                  //   label: dv.ten,
-                  //   value: dv.ma_dviqly,
-                  // }))}
-                  // onChange={(e) =>
-                  //   setOptions({ ...options, don_vi_giao: e.value })
-                  // }
                   options={phongBanArr}
                   filter
                   onChange={(e) => {
                     console.log(e.value);
-                    setOptions({ ...options, don_vi_giao: e.target.value ?? "" });
+                    setOptions({
+                      ...options,
+                      don_vi_giao: e.target.value ?? "",
+                    });
                   }}
                   optionLabel="ten"
                   optionValue="id"
@@ -233,12 +281,16 @@ const GiaoNhanTemChiC3 = () => {
 
               {/* Đơn vị nhận */}
               <div className="flex-auto">
-                <label htmlFor="don_vi_nhan" className="mb-2 block"> Đơn vị nhận </label>
+                <label htmlFor="don_vi_nhan" className="mb-2 block">
+                  {" "}
+                  Đơn vị nhận{" "}
+                </label>
                 <Dropdown
                   id="don_vi_nhan"
                   className="w-full"
                   placeholder="Chọn đơn vị nhận"
                   value={options.don_vi_nhan}
+                  filter
                   options={dsDonvi.map((dv) => ({
                     label: dv.ten,
                     value: dv.ma_dviqly,
@@ -252,32 +304,44 @@ const GiaoNhanTemChiC3 = () => {
 
               {/* Loại */}
               <div className="flex-auto">
-                <label htmlFor="loai" className="mb-2 block"> Loại </label>
-                <InputText
+                <label htmlFor="loai" className="mb-2 block">
+                  {" "}
+                  Loại{" "}
+                </label>
+
+                <Dropdown
                   id="loai"
                   className="w-full"
-                  placeholder="Nhập loại"
-                  onChange={(e) =>
-                    setOptions({ ...options, loai: e.target.value })
-                  }
+                  placeholder="Chọn loại"
                   value={options.loai}
+                  filter
+                  options={[
+                    { label: "Tem", value: "Tem" },
+                    { label: "Chì", value: "Chì" },
+                  ]}
+                  onChange={(e) => setOptions({ ...options, loai: e.value })}
+                  showClear
                 />
               </div>
 
               {/* Trạng thái */}
               <div className="flex-auto">
-                <label htmlFor="trang_thai" className="mb-2 block"> Trạng thái </label>
-                
+                <label htmlFor="trang_thai" className="mb-2 block">
+                  {" "}
+                  Trạng thái{" "}
+                </label>
+
                 <Dropdown
                   id="trang_thai"
                   className="w-full"
                   placeholder="Chọn trạng thái"
                   value={options.trang_thai}
+                  filter
                   options={[
                     { label: "Không chọn", value: null },
                     { label: "Chờ xác nhận", value: 0 },
-                    { label: "Ký cấp 1", value: 1 },
-                    { label: "Ký cấp 2", value: 2 },
+                    { label: "Đã ký giao", value: 1 },
+                    { label: "Đã ký nhận", value: 2 },
                     { label: "Hủy", value: 3 },
                   ]}
                   onChange={(e) =>
@@ -323,7 +387,7 @@ const GiaoNhanTemChiC3 = () => {
               handleCloseModal={handleCloseModal}
               toast={toast}
               loadData={loadData}
-              donViArr={donViArr} 
+              donViArr={donViArr}
               bienBan={bienBan}
               setBienBan={setBienBan}
             />
@@ -331,12 +395,12 @@ const GiaoNhanTemChiC3 = () => {
 
           {visibleViewer && (
             <BienBanViewer
-              bienBan={bienBan}
+              giaoNhanTemChi={bienBan}
               visible={visibleViewer}
               handleCloseModalViewer={handleCloseModalViewer}
               showToast={showToast}
               setBienBan={setBienBan}
-              loadData={loadDataTable}
+              loadData={loadData}
             />
           )}
         </div>
