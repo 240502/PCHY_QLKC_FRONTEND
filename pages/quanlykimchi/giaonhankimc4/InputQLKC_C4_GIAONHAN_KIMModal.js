@@ -261,8 +261,9 @@ export const InputQLKC_KHO_CHI_TEMModal = ({
         const ma_dviqly = JSON.parse(
           sessionStorage.getItem("current_MADVIQLY") || ""
         );
+        const data = {ma_dviqly: ma_dviqly};
         const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(
-          ma_dviqly
+          data
         );
         setUsers(res);
       } catch (e) {

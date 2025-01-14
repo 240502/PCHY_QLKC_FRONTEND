@@ -70,6 +70,7 @@ const GiaonhankimC4 = () => {
     fetchUsers();
   }, []);
   const [idToMaHieuMap, setIdToMaHieuMap] = useState({});
+  console.log("idToMaHieuMap", idToMaHieuMap);
 
   const fetchD_KIMData = async () => {
     try {
@@ -152,6 +153,7 @@ const GiaonhankimC4 = () => {
         );
 
         setArrC4GiaoNhanKim(mappedData);
+
         console.log("mappedData", mappedData);
       } else {
         console.error("Không có dữ liệu trong phản hồi từ API");
@@ -214,6 +216,9 @@ const GiaonhankimC4 = () => {
     setBienBan(rowData);
   };
 
+
+  
+
   const showToast = (type, message) => {
     toast.current.show({
       severity: type,
@@ -223,6 +228,7 @@ const GiaonhankimC4 = () => {
   };
   console.log("setBienBan", setBienBan);
   console.log("options.ngaY_GIAO", options.ngaY_GIAO);
+  console.log("fetchD_KIMData",fetchD_KIMData)
   return (
     <div className="grid">
       <div className="col-12">
@@ -242,8 +248,8 @@ const GiaonhankimC4 = () => {
                   value={options.tranG_THAI}
                   options={[
                     { label: "Chờ xác nhận", value: 0 },
-                    { label: "Ký cấp 1", value: 1 },
-                    { label: "Ký cấp 2", value: 2 },
+                    { label: "Đã ký giao", value: 1 },
+                    { label: "Đã ký nhận", value: 2 },
                   ]}
                   onChange={(e) =>
                     setOptions({ ...options, tranG_THAI: e.value })
@@ -344,6 +350,8 @@ const GiaonhankimC4 = () => {
               toast={toast}
               loadData={loadData}
               fetchD_KIMData={fetchD_KIMData}
+            
+
             />
           )}
           {visibleViewer && (

@@ -291,10 +291,10 @@ const TableQLKC_C4_GIAONHAN_KIM = ({
           />
         )}
 
-        {!isPhongKinhDoanh && (
+        {!isPhongKinhDoanh && rowData?.loaI_BBAN !== 1 &&  rowData?.tranG_THAI === 2  &&(
           <Button
             icon="pi pi-refresh"
-            tooltip="Cập nhật loại biên bản"
+            tooltip="Trả kìm"
             tooltipOptions={{ position: "top" }}
             style={{
               backgroundColor: "#007bff",
@@ -480,7 +480,7 @@ const TableQLKC_C4_GIAONHAN_KIM = ({
               toast.current.show({
                 severity: "success",
                 summary: "Thông báo",
-                detail: "Cập nhật loại biên bản thành công",
+                detail: "Trả kìm thành công",
                 life: 3000,
               });
               loadData();
@@ -488,7 +488,7 @@ const TableQLKC_C4_GIAONHAN_KIM = ({
               toast.current.show({
                 severity: "error",
                 summary: "Thông báo",
-                detail: "Cập nhật loại biên bản không thành công",
+                detail: "Trả kìm không thành công",
                 life: 3000,
               });
             }
@@ -523,47 +523,87 @@ const TableQLKC_C4_GIAONHAN_KIM = ({
         const idNumer = Number(id);
         return getMaHieuFromId(idNumer);
       });
-      return <span>{maHieuList.join(", ")}</span>;
+      console.log("maHieuList", maHieuList.join(", "));
+      return maHieuList.join(", ");
     } else {
       console.log("idToMaHieuMap", idToMaHieuMap);
       console.log(
         "getMaHieuFromId(rowData.iD_KIM)",
         getMaHieuFromId(rowData.iD_KIM)
       );
-      return <span>{getMaHieuFromId(rowData.iD_KIM)}</span>;
+      return getMaHieuFromId(rowData.iD_KIM);
     }
     // Convert iD_KIM (comma-separated string) to ma_hieu
   };
 
   const tenNguoiGiaoBodyTemplate = (rowData) => {
     if (!rowData || rowData.tranG_THAI === undefined) {
-      return `${rowData?.ten_nguoi_giao || "Không xác định"} (Chưa ký)`;
+      return (
+        <>
+          {rowData?.ten_nguoi_giao || "Không xác định"}{" "}
+          <p style={{ color: "red",fontWeight:700 }}>Chưa ký</p>
+        </>
+      );
     }
     if (rowData.tranG_THAI === 1 || rowData.tranG_THAI === 2) {
-      return `${rowData.ten_nguoi_giao} (Đã ký)`;
+      return (
+        <>
+          {rowData.ten_nguoi_giao}{" "}
+          <p style={{ color: "green",fontWeight:700 }}>Đã ký</p>
+        </>
+      );
     } else if (rowData.tranG_THAI === 0) {
-      return `${rowData.ten_nguoi_giao} (Chưa ký)`;
+      return (
+        <>
+          {rowData.ten_nguoi_giao}{" "}
+          <p style={{ color: "red",fontWeight:700 }}>Chưa ký</p>
+        </>
+      );
     } else if (rowData.tranG_THAI === 3) {
-      return `${rowData.ten_nguoi_giao} (Đã hủy)`;
+      return (
+        <>
+          {rowData.ten_nguoi_giao}{" "}
+          <p style={{ color: "gray",fontWeight:700 }}>Đã hủy</p>
+        </>
+      );
     }
     return rowData.ten_nguoi_giao; // Default case
   };
-
-  // Body template for the "Người nhận" column
+  
   const tenNguoiNhanBodyTemplate = (rowData) => {
     if (!rowData || rowData.tranG_THAI === undefined) {
-      return `${rowData?.ten_nguoi_nhan || "Không xác định"} (Chưa ký)`;
+      return (
+        <>
+          {rowData?.ten_nguoi_nhan || "Không xác định"}{" "}
+          <p style={{ color: "red",fontWeight:700 }}>Chưa ký</p>
+        </>
+      );
     }
     if (rowData.tranG_THAI === 2) {
-      return `${rowData.ten_nguoi_nhan} (Đã ký)`;
+      return (
+        <>
+          {rowData.ten_nguoi_nhan}{" "}
+          <p style={{ color: "green",fontWeight:700 }}>Đã ký</p>
+        </>
+      );
     } else if (rowData.tranG_THAI === 0 || rowData.tranG_THAI === 1) {
-      return `${rowData.ten_nguoi_nhan} (Chưa ký)`;
+      return (
+        <>
+          {rowData.ten_nguoi_nhan}{" "}
+          <p style={{ color: "red",fontWeight:700 }}>Chưa ký</p>
+        </>
+      );
     } else if (rowData.tranG_THAI === 3) {
-      return `${rowData.ten_nguoi_nhan} (Đã hủy)`;
+      return (
+        <>
+          {rowData.ten_nguoi_nhan}{" "}
+          <p style={{ color: "gray",fontWeight:700 }}>Đã hủy</p>
+        </>
+      );
     }
     return rowData.ten_nguoi_nhan; // Default case
   };
-
+  
   // Hàm lọc dữ liệu dựa trên loại biên bản
   const filteredData = data.filter((record) => {
     if (filterType === "0") return record.loaI_BBAN === 0; // Mượn kìm
@@ -605,28 +645,46 @@ const TableQLKC_C4_GIAONHAN_KIM = ({
         </div>
 
         <DataTable
-          value={filteredData}
-          showGridlines
-          stripedRows
-          filters={filters}
-          onFilter={(e) => setFilters(e.filters)}
-          rowkey="id"
-          rows={pageSize}
-          rowsPerPageOptions={[5, 10]}
-          className="datatable-responsive"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          selection={selectedRecords}
-          onSelectionChange={(e) => setSelectedRecords(e.value)}
-          responsiveLayout="scroll"
-        >
-          <Column
-            selectionMode="multiple"
-            headerStyle={{
-              width: "3em",
-              backgroundColor: "#1445a7",
-              color: "#fff",
-            }}
-          ></Column>
+  value={filteredData}
+  showGridlines
+  stripedRows
+  filters={filters}
+  onFilter={(e) => setFilters(e.filters)}
+  rowKey="id"
+  rows={pageSize}
+  rowsPerPageOptions={[5, 10]}
+  className="datatable-responsive"
+  paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+  selection={selectedRecords}
+  onSelectionChange={(e) => setSelectedRecords(e.value)}
+  responsiveLayout="scroll"
+  rowClassName={(rowData) => {
+
+const ngayTra = new Date(rowData?.ngaY_TRA);
+const ngayGiao = new Date(rowData?.ngaY_GIAO);
+const diffHours = (ngayTra - ngayGiao) / (1000 * 60 * 60);
+
+console.log("Ngày giao:", ngayGiao, "Ngày trả:", ngayTra, "diffHours:", diffHours);
+
+// Log chi tiết để kiểm tra điều kiện
+if (diffHours > 24) {
+  console.log("Class applied: p-row-danger");
+  return "bg-red-200 ";
+} else {
+  console.log("Class applied: p-row-success");
+  return "";
+}
+}}
+
+>
+  <Column
+    selectionMode="multiple"
+    headerStyle={{
+      width: "3em",
+      backgroundColor: "#1445a7",
+      color: "#fff",
+    }}
+  ></Column>
           <Column
             {...propSortAndFilter}
             headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
@@ -778,7 +836,22 @@ const TableQLKC_C4_GIAONHAN_KIM = ({
         visible={isConfirmVisible}
         onHide={() => setIsConfirmVisible(false)}
         header="Xác nhận"
-        message={`Bạn có chắc chắn muốn ${actionType} không?`}
+        message={
+        <>
+            <div>Bạn có chắc chắn muốn {actionType} với các mã kìm:</div>
+            {selectedRecord && selectedRecord.iD_KIM && selectedRecord.iD_KIM.split(",").map((id) => (
+                <div key={id}>
+                    <input
+                        type="checkbox"
+                        value={id}
+                        // onChange={handleCheckboxChange}
+                        checked={selectedRecords.includes(id)}
+                    />
+                    {getMaHieuFromId(Number(id))} {/* Giả sử bạn có hàm này để lấy mã hiệu từ ID */}
+                </div>
+            ))}
+        </>
+    }
         icon="pi pi-info-circle"
         footer={
           <div>

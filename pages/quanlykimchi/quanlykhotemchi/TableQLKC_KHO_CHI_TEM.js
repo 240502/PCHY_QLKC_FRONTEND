@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
@@ -11,7 +11,7 @@ import { Card } from "primereact/card";
 import { Divider } from "primereact/divider";
 import { Dropdown } from "primereact/dropdown";
 import { deleteDM_PHONGBAN } from "../../../services/quantrihethong/DM_PHONGBANService";
-import {delete_QLKC_KHO_CHI_TEM} from "../../../services/quanlykimchi/QLKC_KHO_CHI_TEMService";
+import { delete_QLKC_KHO_CHI_TEM } from "../../../services/quanlykimchi/QLKC_KHO_CHI_TEMService";
 import { FilterMatchMode, PrimeIcons } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 
@@ -35,7 +35,7 @@ const TableQLKC_KHO_CHI_TEM = ({
     const [globalFilterValue, setGlobalFilterValue] = useState("");
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isMultiDelete, setIsMultiDelete] = useState(false);
-
+    const [dsDonVi, setDsDonVi] = useState([]);
     const [filters, setFilters] = useState({
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
         ten: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
@@ -73,7 +73,7 @@ const TableQLKC_KHO_CHI_TEM = ({
                 summary: "Thông báo",
                 detail: "Xóa bản ghi không thành công",
                 life: 3000,
-                
+
             });
         }
     };
@@ -81,10 +81,17 @@ const TableQLKC_KHO_CHI_TEM = ({
     const cancel = () => {
         setIsHide(false);
     };
-    // console.log("Bộ lọc DataTable:", filters);
+    useEffect(() => {
+        // Lấy dữ liệu từ sessionStorage (giả định dữ liệu lưu dưới dạng JSON string)
+        const dsDonViFromSession = sessionStorage.getItem("ds_donvi");
+        if (dsDonViFromSession) {
+            setDsDonVi(JSON.parse(dsDonViFromSession));
+        }
+    }, []);
+    console.log("data:", data)
 
 
-    const buttonOption = (rowData   ) => {
+    const buttonOption = (rowData) => {
         return (
             <div className="flex">
                 <Button
@@ -124,7 +131,7 @@ const TableQLKC_KHO_CHI_TEM = ({
                     {selectedRecords.length > 0 &&
                         <Button
                             label="Xóa nhiều"
-                           severity="danger"
+                            severity="danger"
                             onClick={() => {
                                 setIsHide(true);
                                 setIsMultiDelete(true);
@@ -171,7 +178,7 @@ const TableQLKC_KHO_CHI_TEM = ({
                     value={data}
                     showGridlines
                     stripedRows
-                    
+
                     filters={filters}
                     onFilter={(e) => setFilters(e.filters)}
                     rowkey="iD_KHO"
@@ -187,45 +194,29 @@ const TableQLKC_KHO_CHI_TEM = ({
                     <Column
                         {...propSortAndFilter}
                         headerStyle={{ backgroundColor: '#1445a7', color: '#fff' }}
-                        field="loai"
-                        header="Loại"
+                        field="ma_dviqly"
+                        header="Đơn vị quản lý"
+                        body={(rowData) => {
+                            const donVi = dsDonVi.find((dv) => dv.ma_dviqly === rowData.ma_dviqly);
+                            return donVi ? donVi.ten : "Không xác định";
+                        }}
                         className="min-w-10rem"
                     ></Column>
                     <Column
                         {...propSortAndFilter}
                         headerStyle={{ backgroundColor: '#1445a7', color: '#fff' }}
-                        field="sO_LUONG"
-                        header="Số lượng"
+                        field="so_luong_chi"
+                        header="Số lượng chì"
                         className="min-w-8rem"
                     ></Column>
-                     <Column
-                        {...propSortAndFilter}
-                        headerStyle={{ backgroundColor: '#1445a7', color: '#fff' }}
-                        field="thang"
-                        header="Tháng"
-                        className="min-w-8rem"
-                    ></Column>
-                     <Column
-                        {...propSortAndFilter}
-                        headerStyle={{ backgroundColor: '#1445a7', color: '#fff' }}
-                        field="nam"
-                        header="Năm"
-                        className="min-w-8rem"
-                    ></Column>
-                     <Column
-                        {...propSortAndFilter}
-                        headerStyle={{ backgroundColor: '#1445a7', color: '#fff' }}
-                        field="doN_VI_TINH"
-                        header="Đơn vị tính"
-                        className="min-w-8rem"
-                    ></Column>
-                   
                     <Column
+                        {...propSortAndFilter}
                         headerStyle={{ backgroundColor: '#1445a7', color: '#fff' }}
-                        body={buttonOption}
-                        header="Thao tác"
+                        field="so_luong_tem"
+                        header="Số lượng tem "
                         className="min-w-8rem"
                     ></Column>
+
                 </DataTable>
 
                 <div className="flex flex-column md:flex-row justify-content-between align-items-center gap-3 mt-4">

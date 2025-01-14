@@ -11,7 +11,7 @@ import { Card } from "primereact/card";
 import { Panel } from "primereact/panel";
 
 import { QLKC_KHO_CHI_TEM } from "../../../models/QLKC_KHO_CHI_TEM"
-import { search_QLKC_KHO_CHI_TEM } from "../../../services/quanlykimchi/QLKC_KHO_CHI_TEMService";
+import { get_QLKC_NHAP_CHI_TEMGroup } from "../../../services/quanlykimchi/QLKC_KHO_CHI_TEMService";
 
 const KhoChiTem = () => {
   const [page, setPage] = useState(1);
@@ -42,9 +42,12 @@ const loadData = async () => {
     };
     console.log(data)
 
-    const items = await search_QLKC_KHO_CHI_TEM(data);
+    const items = await get_QLKC_NHAP_CHI_TEMGroup(data);
+    console.log("items:", items);
+console.log("items.data:", items?.data);
     console.log('Kết quả tìm kiếm:', items); // Kiểm tra kết quả trả về
-    setArrKhoChiTem(items.data || []);
+    setArrKhoChiTem(Array.isArray(items) ? items : []);
+
     setPageCount(Math.ceil(items?.totalItems / pageSize));
   } catch (err) {
     console.error("Lỗi tải dữ liệu:", err);
@@ -63,13 +66,13 @@ useEffect(() => {
     console.log("Nút Tìm kiếm được bấm");
     loadData();
   };
-console.log("ok",KHOCHITEM)
+console.log("arrKhoChiTem",arrKhoChiTem)
   
   return (
     <div className="grid">
       <div className="col-12">
         <div className="card">
-          <Panel header="Tìm kiếm" className="mb-4">
+          {/* <Panel header="Tìm kiếm" className="mb-4">
             <Divider style={{ marginTop: "0", marginBottom: "10px" }} />
 
             <div className="flex flex-column lg:flex-row gap-3">
@@ -132,7 +135,7 @@ console.log("ok",KHOCHITEM)
                 severity="info"
               />
             </div>
-          </Panel>
+          </Panel> */}
 
           <TableQLKC_KHO_CHI_TEM
            
