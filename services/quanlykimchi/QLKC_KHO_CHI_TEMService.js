@@ -1,8 +1,8 @@
 import { apiClient } from "../../constants/api";
 
-export const get_All_QLKC_KHO_CHI_TEM = async () => {
+export const get_QLKC_NHAP_CHI_TEMGroup = async () => {
   
-    const res = await apiClient.get("/QLKC_KHO_CHI_TEM/get_All_QLKC_KHO_CHI_TEM")
+    const res = await apiClient.get("/QLKC_NHAP_CHI_TEM/get_QLKC_NHAP_CHI_TEMGroup")
     return res.data;
 }
 
