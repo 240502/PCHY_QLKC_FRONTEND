@@ -30,7 +30,6 @@ export const InputDM_C3Modal = ({
   const [errors, setErrors] = useState({});
   const [dsDonvi, setDsDonvi] = useState([]);
   const [users, setUsers] = useState([HT_NGUOIDUNG]);
-  const [currentUserName, setCurrentUserName] = useState("");
   const [phongBanArr, setPhongBanArr] = useState([]);
   const currentUser = JSON.parse(sessionStorage.getItem("user") || "{}");
 
@@ -58,25 +57,15 @@ export const InputDM_C3Modal = ({
     getDSDVIQLY();
     getDSDVIQLY1();
   }, [isUpdate, giaoNhanTemChi]);
-
-  useEffect(() => {
-    const getHT_NGUOIDUNGByMA_DVIQLY = async () => {
-      try {
-        const ma_dviqly = JSON.parse(
-          sessionStorage.getItem("current_MADVIQLY") || ""
-        );
-        const data = { ma_dviqly: ma_dviqly };
-        const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(data);
-        setUsers(res);
-      } catch (e) {
-        console.log(e);
-      }
-    };
-
-    getHT_NGUOIDUNGByMA_DVIQLY();
-
-    console.log("C3GiaoNhanTemChi", C3GiaoNhanTemChi);
-  }, []);
+  const getHT_NGUOIDUNGByMA_DVIQLY = async (ma_dviqly) => {
+    try {
+      const data = { ma_dviqly: ma_dviqly };
+      const res = await HT_NGUOIDUNG_Service.getHT_NGUOIDUNGByMADVIQLY(data);
+      setUsers(res);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   useEffect(() => {
     if (currentUser && currentUser.id) {
@@ -85,7 +74,6 @@ export const InputDM_C3Modal = ({
         ...prev,
         nguoi_giao: currentUser.id,
       }));
-      setCurrentUserName(currentUser.ho_ten || "");
     } else {
       console.error("User data is not available or invalid:", currentUser);
     }
@@ -96,12 +84,6 @@ export const InputDM_C3Modal = ({
     // Chuẩn bị dữ liệu trước khi gửi
     const dataToSend = {
       ...C3GiaoNhanTemChi,
-      ngay_giao: C3GiaoNhanTemChi.ngay_giao
-        ? new Date(C3GiaoNhanTemChi.ngay_giao).toISOString()
-        : null,
-      ngay_nhan: C3GiaoNhanTemChi.ngay_nhan
-        ? new Date(C3GiaoNhanTemChi.ngay_nhan).toISOString()
-        : null,
       soluong: C3GiaoNhanTemChi.soluong
         ? parseInt(C3GiaoNhanTemChi.soluong, 10)
         : 0,
@@ -173,7 +155,6 @@ export const InputDM_C3Modal = ({
 
   const handleUpdate = async () => {
     try {
-      console.log(C3GiaoNhanTemChi);
       await update_QLKC_C3_GIAONHAN_TEMCHI(C3GiaoNhanTemChi);
       toast.current.show({
         severity: "success",
@@ -212,12 +193,12 @@ export const InputDM_C3Modal = ({
     });
   };
 
-  const handleDateChange = useCallback((e) => {
-    setC3GiaoNhanTemChi((prev) => ({
-      ...prev,
-      ngay_giao: e.value,
-    }));
-  }, []);
+  // const handleDateChange = useCallback((e) => {
+  //   setC3GiaoNhanTemChi((prev) => ({
+  //     ...prev,
+  //     ngay_giao: e.value,
+  //   }));
+  // }, []);
 
   return (
     <Dialog
@@ -283,6 +264,7 @@ export const InputDM_C3Modal = ({
                   ...bienBan,
                   don_vi_nhan: e.value,
                 });
+                getHT_NGUOIDUNGByMA_DVIQLY(e.value);
                 setC3GiaoNhanTemChi({
                   ...C3GiaoNhanTemChi,
                   don_vi_nhan: e.value,
@@ -336,25 +318,13 @@ export const InputDM_C3Modal = ({
               id="donvi_tinh"
               className={`w-full ${errors.donvi_tinh ? "p-invalid" : ""}`}
               placeholder="Nhập đơn vị tính..."
-              onChange={(e) => {
-                setC3GiaoNhanTemChi({
-                  ...C3GiaoNhanTemChi,
-                  donvi_tinh: e.target.value,
-                });
-              }}
-              onFocus={() => {
-                if (errors.donvi_tinh) {
-                  setErrors({});
-                }
-              }}
               type="text"
               value={C3GiaoNhanTemChi.donvi_tinh}
             />
-            {errors.donvi_tinh && (
-              <small className="p-error">{errors.donvi_tinh}</small>
-            )}
           </div>
+        </div>
 
+        <div className="flex gap-4 mt-4">
           <div className="flex flex-column flex-1">
             <label htmlFor="soluong" className="mb-2">
               Số lượng <span style={{ color: "red" }}>*</span>
@@ -381,21 +351,6 @@ export const InputDM_C3Modal = ({
               <small className="p-error">{errors.soluong}</small>
             )}
           </div>
-        </div>
-
-        <div className="flex gap-4 mt-4">
-          <div className="flex flex-column flex-1">
-            <label htmlFor="soluong" className="mb-2">
-              Người giao <span style={{ color: "red" }}>*</span>
-            </label>
-            <InputText
-              id="nguoi_giao"
-              className={`w-full ${errors.nguoi_giao ? "p-invalid" : ""}`}
-              value={currentUserName}
-              disabled
-            />
-          </div>
-
           <div className="flex flex-column flex-1">
             <label htmlFor="nguoi_nhan" className="mb-2">
               Người nhận <span style={{ color: "red" }}>*</span>
@@ -411,7 +366,10 @@ export const InputDM_C3Modal = ({
               optionLabel="hO_TEN"
               onChange={(e) => {
                 console.log(`Selected user: ${e.value}`);
-                handleInputChange("nguoi_nhan", e.value);
+                setC3GiaoNhanTemChi({
+                  ...C3GiaoNhanTemChi,
+                  nguoi_nhan: e.value,
+                });
               }}
               onFocus={() => {
                 if (errors.nguoi_nhan) {
@@ -425,6 +383,7 @@ export const InputDM_C3Modal = ({
           </div>
         </div>
 
+        {/*
         <div className="flex gap-4 mt-4">
           <div className="flex flex-column flex-1">
             <label htmlFor="ngay_giao" className="mb-2">
@@ -477,7 +436,7 @@ export const InputDM_C3Modal = ({
               <small className="p-error">{errors.ngay_nhan}</small>
             )}
           </div>
-        </div>
+        </div>*/}
 
         {/* Nút hành động */}
         <div className="flex justify-content-center gap-4 mt-4">

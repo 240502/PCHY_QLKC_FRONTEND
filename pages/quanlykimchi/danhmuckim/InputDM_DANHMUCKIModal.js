@@ -4,12 +4,13 @@ import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { QLKC_D_KIM } from "../../../models/QLKC_D_KIM";
 import { Button } from "primereact/button";
-
+import moment from "moment";
 import {
   D_KIMService,
   insert_D_KIM,
   update_D_KIM,
 } from "../../../services/quanlykimchi/D_KIMService";
+import { Calendar } from "primereact/calendar";
 
 export const InputDM_DANHMUCKIMModal = ({
   currentMA_DVIQLY,
@@ -33,7 +34,8 @@ export const InputDM_DANHMUCKIMModal = ({
 
   useEffect(() => {
     if (isUpdate) {
-      setDanhMucKim(danhmuckim);
+      const userLocal = JSON.parse(sessionStorage.getItem("user"));
+      setDanhMucKim({ ...danhmuckim, nguoi_sua: userLocal.id });
       // setTrangThai(danhmuckim.trang_thai);
     } else {
       setDanhMucKim(QLKC_D_KIM);
@@ -111,7 +113,7 @@ export const InputDM_DANHMUCKIMModal = ({
       if (handleValidate()) {
         const result = await update_D_KIM({
           ...danhMucKim,
-          nguoi_sua: "1",
+          thoi_han: moment(danhMucKim.thoi_han).toDate(),
         });
         toast.current.show({
           severity: "success",
@@ -141,6 +143,17 @@ export const InputDM_DANHMUCKIMModal = ({
     }
   };
 
+  useEffect(() => {
+    console.log("danh mục kìm", danhMucKim);
+    console.log(
+      "danh mục kìm",
+      danhMucKim.thoi_han !== null ? moment(danhMucKim.thoi_han).toDate() : null
+    );
+
+    return () => {
+      setDanhMucKim(QLKC_D_KIM);
+    };
+  }, []);
   return (
     <Dialog
       header={!isUpdate ? "Thêm mới danh mục kim" : "Sửa danh mục kim"}
@@ -199,6 +212,29 @@ export const InputDM_DANHMUCKIMModal = ({
             />
             {errors.ma_hieu && (
               <small className="p-error">{errors.ma_hieu}</small>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-4 mt-4">
+          <div className="flex flex-column flex-1">
+            <label htmlFor="LOAI_MA_KIM" className="mb-2">
+              Thời hạn
+            </label>
+            <Calendar
+              value={
+                danhMucKim.thoi_han !== null
+                  ? moment(danhMucKim.thoi_han).toDate()
+                  : null
+              }
+              onChange={(e) => {
+                setDanhMucKim({
+                  ...danhMucKim,
+                  thoi_han: moment(e.value).toDate(),
+                });
+              }}
+            />
+            {errors.loai_ma_kim && (
+              <small className="p-error">{errors.loai_ma_kim}</small>
             )}
           </div>
         </div>

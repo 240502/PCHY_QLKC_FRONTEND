@@ -42,7 +42,10 @@ const GiaoNhanTemChiC3 = () => {
   const [bienBanArr, setBienBanArr] = useState([]);
 
   const toast = useRef(null);
-
+  const current_MADVIQLY = JSON.parse(
+    sessionStorage.getItem("current_MADVIQLY")
+  );
+  const userLocal = JSON.parse(sessionStorage.getItem("user"));
   useEffect(() => {
     const storedDsDonvi = sessionStorage.getItem("ds_donvi");
     if (storedDsDonvi) {
@@ -118,6 +121,11 @@ const GiaoNhanTemChiC3 = () => {
         pageIndex: page,
         pageSize: pageSize,
         ma_dviqly,
+        ht_nguoi_dung_id:
+          current_MADVIQLY === "PA23" ||
+          userLocal.ten_donvi === "CÔNG TY ĐIỆN LỰC HƯNG YÊN"
+            ? ""
+            : userLocal.id,
         ...(isPhongKinhDoanh ? {} : { userId: user.id }), // Nếu là phòng kinh doanh, không thêm userId
         ...(options.don_vi_giao ? { don_vi_giao: options.don_vi_giao } : {}),
         ...(options.don_vi_nhan ? { don_vi_nhan: options.don_vi_nhan } : {}),

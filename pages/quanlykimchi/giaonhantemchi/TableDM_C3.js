@@ -569,7 +569,7 @@ export const TableDM_C3 = ({
             header="Người nhận"
             className="min-w-10rem"
             body={(rowData) => {
-              if (rowData.trang_thai === 0) {
+              if (rowData.trang_thai !== 2) {
                 return (
                   <>
                     <p style={{ fontSize: "15px" }}>{rowData.ten_nguoi_nhan}</p>
@@ -592,24 +592,6 @@ export const TableDM_C3 = ({
                 );
               }
             }}
-          ></Column>
-
-          <Column
-            {...propSortAndFilter}
-            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="ngay_giao"
-            header="Ngày giao"
-            body={ngayGiaoTemplate}
-            className="min-w-8rem"
-          ></Column>
-
-          <Column
-            {...propSortAndFilter}
-            headerStyle={{ backgroundColor: "#1445a7", color: "#fff" }}
-            field="ngay_nhan"
-            header="Ngày nhận"
-            body={ngayNhanTemplate}
-            className="min-w-8rem"
           ></Column>
 
           <Column
